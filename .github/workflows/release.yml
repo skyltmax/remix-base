@@ -1,0 +1,64 @@
+name: Publish release
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write # required for trusted publishing
+
+concurrency:
+  group: publish-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  verify:
+    name: Verify versions match tag
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Extract versions
+        id: versions
+        shell: bash
+        run: |
+          TAG="${GITHUB_REF_NAME}"
+          # Allow tags like v1.2.3 or 1.2.3
+          TAG_NO_V=${TAG#v}
+          echo "tag=${TAG_NO_V}" >> "$GITHUB_OUTPUT"
+
+          # package.json version via Node (works regardless of type: module)
+          PKG_VER=$(node -e "console.log(JSON.parse(require('fs').readFileSync('package.json','utf8')).version)")
+          echo "npm=${PKG_VER}" >> "$GITHUB_OUTPUT"
+
+          echo "Tag:        $TAG_NO_V"
+          echo "npm:        $PKG_VER"
+
+          if [[ "$PKG_VER" != "$TAG_NO_V" ]]; then
+            echo "Version mismatch: tag=$TAG_NO_V, npm=$PKG_VER" >&2
+            exit 1
+          fi
+
+  publish_npm:
+    name: Publish to npm
+    needs: verify
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          registry-url: "https://registry.npmjs.org"
+
+      - name: Ensure modern npm for OIDC trusted publishing
+        run: npm install -g npm@latest
+
+      - name: Publish to npm
+        run: |
+          # For scoped packages, ensure public access on first publish
+          npm publish --access public

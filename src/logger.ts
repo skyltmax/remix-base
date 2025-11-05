@@ -1,0 +1,98 @@
+import { randomUUID } from "node:crypto"
+import pino, { type LoggerOptions } from "pino"
+import pinohttp, { type Options as HttpLoggerOpts } from "pino-http"
+import { IS_DEV } from "./env"
+
+const loggerOpts: LoggerOptions = {
+  timestamp: pino.stdTimeFunctions.isoTime,
+  formatters: {
+    level: label => {
+      return {
+        level: label,
+      }
+    },
+  },
+}
+
+export const logger = pino(
+  IS_DEV
+    ? {
+        ...loggerOpts,
+        transport: {
+          target: "pino-pretty",
+          options: {
+            colorize: true,
+          },
+        },
+      }
+    : loggerOpts
+)
+
+const expressLoggerOpts: HttpLoggerOpts = {
+  logger,
+
+  genReqId: function (req, res) {
+    const existingID = req.id ?? req.headers["x-request-id"]
+    if (existingID) return existingID
+    const id = randomUUID()
+    res.setHeader("X-Request-Id", id)
+    return id
+  },
+
+  autoLogging: {
+    ignore(req) {
+      return (
+        /\.(ts|tsx|css|js|map|png|webm|webp)$/.test(req.url || "") ||
+        /^\/(@vite|@id|node_modules|fonts|adminfonts)/.test(req.url || "") ||
+        /\.(ts|tsx|css|js|map|png|webm|webp)\?.+/.test(req.url || "") ||
+        false
+      )
+    },
+  },
+
+  serializers: {
+    req: req => ({
+      id: req.id,
+      ip: req.ip || req.headers["x-forwarded-for"] || req.remoteAddress,
+      headers: {
+        host: req.headers.host,
+        origin: req.headers.origin,
+        "user-agent": req.headers["user-agent"],
+      },
+      params: req.params,
+      method: req.method,
+      url: req.url,
+    }),
+    res: res => ({
+      headers: {
+        "content-type": res.headers["content-type"],
+      },
+      statusCode: res.statusCode,
+    }),
+  },
+}
+
+export const expressLogger = pinohttp(
+  IS_DEV
+    ? {
+        ...expressLoggerOpts,
+
+        quietReqLogger: true,
+        quietResLogger: true,
+
+        customReceivedMessage: function (req) {
+          return `Started ${req.method} "${req.url}" for ${req.socket.remoteAddress}`
+        },
+
+        customSuccessMessage: function (req, res) {
+          return `Completed ${res.statusCode}`
+        },
+
+        customErrorMessage: function (req, res) {
+          return `Failed ${res.statusCode}`
+        },
+      }
+    : expressLoggerOpts
+)
+
+export default logger

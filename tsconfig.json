@@ -1,0 +1,4 @@
+{
+  "extends": ["@signmax/config/typescript"],
+  "include": ["**/*.ts", "**/*.tsx"]
+}

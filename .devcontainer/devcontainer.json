@@ -1,0 +1,11 @@
+{
+  "name": "Remix Base",
+  "dockerComposeFile": "docker-compose.yml",
+  "service": "app",
+  "workspaceFolder": "/workspaces/remixbase",
+  "containerEnv": {
+    "NODE_ENV": "development",
+    "DEVC_WORKSPACE": "${containerWorkspaceFolder}"
+  },
+  "onCreateCommand": ".devcontainer/boot.sh"
+}
