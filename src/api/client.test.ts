@@ -1,10 +1,9 @@
 import { gql } from "graphql-request"
-import { http, HttpResponse } from "msw"
+import { HttpResponse } from "msw"
 import { setupServer } from "msw/node"
 import httpMocks from "node-mocks-http"
 import pino from "pino"
 import { afterEach, beforeAll, describe, expect, it } from "vitest"
-import { API_HOST, API_PORT } from "../env"
 import { gqlOpHandler } from "../test/helpers"
 import { createRequest, createResponseMiddleware } from "./client"
 
@@ -71,15 +70,7 @@ describe("GraphQL client", () => {
         }
       `
 
-      server.use(
-        http.post(`http://${API_HOST}:${API_PORT}/internal_graphql`, ({ request }) => {
-          if (request.headers.get("x-test-header") === "test-value") {
-            return HttpResponse.json({ data: { currentAdmin: { id: 42 } } })
-          }
-
-          return undefined
-        })
-      )
+      server.use(gqlOpHandler("CookiePassthrough", HttpResponse.json({ data: { currentAdmin: { id: 42 } } })))
 
       const res = httpMocks.createResponse()
       const request = createRequest(req, res, createResponseMiddleware(req, res))
