@@ -217,8 +217,6 @@ The package respects common environment variables:
 - `API_HOST` - GraphQL API host (default: localhost)
 - `API_PORT` - GraphQL API port (default: 3000)
 - `API_PATH` - GraphQL API path (default: /graphql)
-- `API_PASSTHROUGH_HEADERS` - Comma-separated list of additional headers to pass through to API (e.g.,
-  "x-custom-header,x-another-header")
 - `SHARED_SECRET` - Shared secret for API authentication
 - `SHARED_SECRET_HEADER` - Header name for shared secret (default: x-shared-secret)
 - `BUILD_DIR` - Client build directory (default: build/client)
@@ -318,14 +316,17 @@ await serveApp(build, undefined, [deviceKey])
 
 ### Custom API Headers
 
-Pass additional headers to your GraphQL API:
+Pass additional headers to your GraphQL API by configuring the client:
 
-```bash
-# Via environment variable
-API_PASSTHROUGH_HEADERS="x-custom-auth,x-tenant-id"
+```typescript
+import { createRequest, createResponseMiddleware } from "@signmax/remix-base/api/client"
+
+const requestFn = createRequest(req, res, createResponseMiddleware(req, res), {
+  passthroughHeaders: ["x-custom-auth", "x-tenant-id"],
+})
 ```
 
-Or configure via code by extending the default headers in your middleware.
+Set `includeDefaultPassthroughHeaders` to `false` to replace the defaults instead of extending them.
 
 ## Publishing
 

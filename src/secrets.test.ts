@@ -36,7 +36,7 @@ describe("loadSecrets", () => {
       () =>
         ({
           send: mockSend,
-        }) as any
+        }) as unknown as SecretsManagerClient
     )
   })
 

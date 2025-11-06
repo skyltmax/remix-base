@@ -1,8 +1,41 @@
 import type * as express from "express"
 import { GraphQLClient, ClientError, type ResponseMiddleware } from "graphql-request"
 import setCookie from "set-cookie-parser"
-import { API_HOST, API_PORT, API_PATH, SHARED_SECRET, SHARED_SECRET_HEADER } from "../env"
 // import { createPersistedQueryFetch } from "./persisted"
+
+export const DEFAULT_ENDPOINT = "http://localhost:3000/graphql"
+const DEFAULT_SHARED_SECRET_HEADER = "x-shared-secret"
+const DEFAULT_SHARED_SECRET = ""
+
+export interface GraphQLClientOptions {
+  endpoint?: string
+  sharedSecret?: string
+  sharedSecretHeader?: string
+  passthroughHeaders?: string[]
+  includeDefaultPassthroughHeaders?: boolean
+}
+
+export const DEFAULT_PASSTHROUGH_HEADERS = [
+  "user-agent",
+  "accept",
+  "accept-language",
+  "accept-encoding",
+  "referer",
+  "origin",
+  "cookie",
+  "sec-fetch-dest",
+  "sec-fetch-mode",
+  "sec-fetch-site",
+  "x-forwarded-for",
+  "x-test-header",
+]
+
+const buildPassthroughHeaderSet = (options?: GraphQLClientOptions) => {
+  const { passthroughHeaders = [], includeDefaultPassthroughHeaders = true } = options ?? {}
+  const combined = [...(includeDefaultPassthroughHeaders ? DEFAULT_PASSTHROUGH_HEADERS : []), ...passthroughHeaders]
+
+  return new Set(combined.map(header => header.toLowerCase()))
+}
 
 export type Variables = object
 
@@ -12,12 +45,10 @@ export interface GraphQLRequestContext<V extends Variables = Variables> {
 }
 
 export const createClient = (
-  uri?: string,
+  uri: string = DEFAULT_ENDPOINT,
   headers: Headers = new Headers(),
   responseMiddleware?: ResponseMiddleware
 ) => {
-  uri = uri || API_PATH
-
   headers.set("content-type", "application/json")
 
   return new GraphQLClient(uri, {
@@ -128,35 +159,24 @@ export const createResponseMiddleware =
     }
   }
 
-const defaultPassthroughHeaders = [
-  "user-agent",
-  "accept",
-  "accept-language",
-  "accept-encoding",
-  "referer",
-  "origin",
-  "cookie",
-  "sec-fetch-dest",
-  "sec-fetch-mode",
-  "sec-fetch-site",
-  "x-forwarded-for",
-  "x-test-header",
-]
-
-// Allow users to add custom headers via environment variable (comma-separated list)
-const customHeaders = process.env.API_PASSTHROUGH_HEADERS?.split(",").map(h => h.trim()) || []
-const passthroughHeaders = [...defaultPassthroughHeaders, ...customHeaders]
-
 // prepares graphql request with a preconfigured client which is shared across a single request
 export const createRequest = (
   request: express.Request,
   response: express.Response,
-  responseMiddleware?: ResponseMiddleware
+  responseMiddleware?: ResponseMiddleware,
+  options?: GraphQLClientOptions
 ): RequestFunc => {
   const headers = new Headers()
+  const {
+    endpoint = DEFAULT_ENDPOINT,
+    sharedSecret = DEFAULT_SHARED_SECRET,
+    sharedSecretHeader = DEFAULT_SHARED_SECRET_HEADER,
+  } = options ?? {}
+  const passthroughHeaderSet = buildPassthroughHeaderSet(options)
 
   for (const [key, values] of Object.entries(request.headers)) {
-    if (!passthroughHeaders.includes(key)) {
+    const normalizedKey = key.toLowerCase()
+    if (!passthroughHeaderSet.has(normalizedKey)) {
       continue
     }
 
@@ -173,22 +193,33 @@ export const createRequest = (
 
   headers.set("host", request.hostname)
   headers.set("x-forwarded-proto", request.protocol === "https" ? "https" : "http")
-  if (SHARED_SECRET) {
-    headers.set(SHARED_SECRET_HEADER, SHARED_SECRET)
+  if (sharedSecret) {
+    headers.set(sharedSecretHeader, sharedSecret)
   }
 
-  const client = createClient(`http://${API_HOST}:${API_PORT}${API_PATH}`, headers, responseMiddleware)
+  const client = createClient(endpoint, headers, responseMiddleware)
 
   return client.request.bind(client)
 }
 
 // prepares graphql request using a Fetch API Request
-export const createSimpleRequest = (request: Request, responseMiddleware?: ResponseMiddleware) => {
+export const createSimpleRequest = (
+  request: Request,
+  responseMiddleware?: ResponseMiddleware,
+  options?: GraphQLClientOptions
+) => {
   const url = new URL(request.url)
   const headers = new Headers()
+  const {
+    endpoint = DEFAULT_ENDPOINT,
+    sharedSecret = DEFAULT_SHARED_SECRET,
+    sharedSecretHeader = DEFAULT_SHARED_SECRET_HEADER,
+  } = options ?? {}
+  const passthroughHeaderSet = buildPassthroughHeaderSet(options)
 
   for (const [key, value] of request.headers.entries()) {
-    if (!passthroughHeaders.includes(key)) {
+    const normalizedKey = key.toLowerCase()
+    if (!passthroughHeaderSet.has(normalizedKey)) {
       continue
     }
 
@@ -199,11 +230,11 @@ export const createSimpleRequest = (request: Request, responseMiddleware?: Respo
 
   headers.set("host", url.host)
   headers.set("x-forwarded-proto", url.protocol === "https:" ? "https" : "http")
-  if (SHARED_SECRET) {
-    headers.set(SHARED_SECRET_HEADER, SHARED_SECRET)
+  if (sharedSecret) {
+    headers.set(sharedSecretHeader, sharedSecret)
   }
 
-  const client = createClient(`http://${API_HOST}:${API_PORT}${API_PATH}`, headers, responseMiddleware)
+  const client = createClient(endpoint, headers, responseMiddleware)
 
   return client.request.bind(client)
 }

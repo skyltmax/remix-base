@@ -243,15 +243,24 @@ GraphQL client utilities with:
 - Cookie forwarding from API responses
 - Request/response logging
 - Error handling with Sentry
-- Configurable passthrough headers
+- Configurable endpoint, shared secret, and passthrough headers via `GraphQLClientOptions`
 - Shared secret authentication
 
 **Key functions:**
 
 - `createClient(uri?, headers?, responseMiddleware?)` - Create GraphQL client
-- `createRequest(req, res, responseMiddleware?)` - Express request setup
-- `createSimpleRequest(request, responseMiddleware?)` - Fetch API request setup
+- `createRequest(req, res, responseMiddleware?, options?)` - Express request setup
+- `createSimpleRequest(request, responseMiddleware?, options?)` - Fetch API request setup
 - `createResponseMiddleware(req, res, skipCookies?)` - Response handler
+
+`GraphQLClientOptions` allows configuring:
+
+- `endpoint` - target GraphQL endpoint (default: `http://localhost:3000/graphql`)
+- `sharedSecret` / `sharedSecretHeader` - authentication pair (header omitted when secret falsy)
+- `passthroughHeaders` - additional headers forwarded alongside `DEFAULT_PASSTHROUGH_HEADERS`
+- `includeDefaultPassthroughHeaders` - disable defaults by setting to `false`
+
+`DEFAULT_PASSTHROUGH_HEADERS` is exported for convenience when composing custom configurations.
 
 #### Middleware
 
@@ -445,8 +454,12 @@ afterAll(() => server.close())
 ```typescript
 import { gqlOpHandler } from "@signmax/remix-base/test/helpers"
 
-const handler = gqlOpHandler("MyOperation", HttpResponse.json({ data: { myField: "value" } }))
+const handler = gqlOpHandler("MyOperation", HttpResponse.json({ data: { myField: "value" } }), {
+  endpoint: "http://localhost:3000/graphql",
+})
 ```
+
+Omit `endpoint` to rely on the library default.
 
 ### Best Practices
 
@@ -477,7 +490,6 @@ All configuration should be environment-based with sensible defaults:
 - `API_HOST` - API host (default: localhost)
 - `API_PORT` - API port (default: 3000)
 - `API_PATH` - API endpoint path (default: /graphql)
-- `API_PASSTHROUGH_HEADERS` - Additional headers (comma-separated)
 - `SHARED_SECRET_HEADER` - Header name (default: x-shared-secret)
 - `BUILD_DIR` - Build directory (default: build/client)
 - `ASSETS_DIR` - Assets directory (default: ${BUILD_DIR}/assets)

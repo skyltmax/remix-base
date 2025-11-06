@@ -1,21 +1,24 @@
 import { type JsonBodyType, type PathParams, type StrictResponse, http } from "msw"
-import { API_HOST, API_PORT, API_PATH } from "../env"
+import { DEFAULT_ENDPOINT } from "../api/client"
 
 export type GqlPersistedRequestBody = {
   operationName?: string
 }
 
-export const gqlOpHandler = (opName: string, handler: StrictResponse<JsonBodyType>) => {
-  return http.post<PathParams, GqlPersistedRequestBody, JsonBodyType>(
-    `http://${API_HOST}:${API_PORT}${API_PATH}`,
-    async ({ request }) => {
-      const params = await request.clone().json()
+export interface GqlOpHandlerOptions {
+  endpoint?: string
+}
 
-      if (params && typeof params === "object" && "operationName" in params && params.operationName === opName) {
-        return handler
-      }
+export const gqlOpHandler = (opName: string, handler: StrictResponse<JsonBodyType>, options?: GqlOpHandlerOptions) => {
+  const endpoint = options?.endpoint ?? DEFAULT_ENDPOINT
 
-      return undefined
+  return http.post<PathParams, GqlPersistedRequestBody, JsonBodyType>(endpoint, async ({ request }) => {
+    const params = await request.clone().json()
+
+    if (params && typeof params === "object" && "operationName" in params && params.operationName === opName) {
+      return handler
     }
-  )
+
+    return undefined
+  })
 }
