@@ -1,8 +1,11 @@
-name: Publish release
+name: Publish
 
 on:
   release:
     types: [published]
+  push:
+    branches:
+      - main
 
 permissions:
   contents: read
@@ -16,6 +19,7 @@ jobs:
   verify:
     name: Verify versions match tag
     runs-on: ubuntu-latest
+    if: github.event_name == 'release'
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -44,6 +48,7 @@ jobs:
   publish_npm:
     name: Publish to npm
     needs: verify
+    if: github.event_name == 'release'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -59,3 +64,49 @@ jobs:
 
       - name: Publish to npm
         run: npm publish --access public
+
+  publish_canary:
+    name: Publish canary to npm
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # needed for git rev-parse
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          registry-url: "https://registry.npmjs.org"
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - name: Install dependencies
+        run: pnpm install
+
+      - name: Run tests
+        run: pnpm test
+
+      - name: Ensure modern npm for OIDC trusted publishing
+        run: npm install -g npm@latest
+
+      - name: Create canary version
+        run: |
+          # Get short commit SHA
+          COMMIT_SHA=$(git rev-parse --short HEAD)
+
+          # Get current version from package.json
+          CURRENT_VERSION=$(node -e "console.log(require('./package.json').version)")
+
+          # Create canary version: current-version-canary.commit-sha
+          CANARY_VERSION="${CURRENT_VERSION}-canary.${COMMIT_SHA}"
+
+          echo "Creating canary version: $CANARY_VERSION"
+          npm version "$CANARY_VERSION" --no-git-tag-version
+
+      - name: Publish canary to npm
+        run: npm publish --access public --tag canary
