@@ -3,7 +3,6 @@ name: Publish release
 on:
   release:
     types: [published]
-  workflow_dispatch:
 
 permissions:
   contents: read
@@ -59,6 +58,4 @@ jobs:
         run: npm install -g npm@latest
 
       - name: Publish to npm
-        run: |
-          # For scoped packages, ensure public access on first publish
-          npm publish --access public
+        run: npm publish --access public
