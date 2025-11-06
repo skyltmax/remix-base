@@ -108,17 +108,6 @@ describe("loadSecrets", () => {
     expect(secrets).toEqual({})
   })
 
-  it("should return empty object in CI environment", async () => {
-    process.env.CI = "true"
-
-    const secrets = await loadSecrets()
-
-    expect(secrets).toEqual({})
-    expect(mockSend).not.toHaveBeenCalled()
-
-    delete process.env.CI
-  })
-
   it("should handle empty SecretString", async () => {
     mockSend.mockResolvedValue({
       SecretString: undefined,

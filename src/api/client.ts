@@ -3,6 +3,8 @@ import { GraphQLClient, ClientError, type ResponseMiddleware } from "graphql-req
 import setCookie from "set-cookie-parser"
 // import { createPersistedQueryFetch } from "./persisted"
 
+export type { ResponseMiddleware } from "graphql-request"
+
 export const DEFAULT_ENDPOINT = "http://localhost:3000/graphql"
 const DEFAULT_SHARED_SECRET_HEADER = "x-shared-secret"
 const DEFAULT_SHARED_SECRET = ""
@@ -207,7 +209,7 @@ export const createSimpleRequest = (
   request: Request,
   responseMiddleware?: ResponseMiddleware,
   options?: GraphQLClientOptions
-) => {
+): GraphQLClient["request"] => {
   const url = new URL(request.url)
   const headers = new Headers()
   const {

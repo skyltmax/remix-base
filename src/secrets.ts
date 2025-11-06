@@ -38,26 +38,22 @@ export async function loadSecrets<T extends Secrets = Secrets>(options?: LoadSec
 
   let secretString: string
 
-  if (process.env.CI === "true") {
-    secretString = "{}"
-  } else {
-    try {
-      const response = await client.send(
-        new GetSecretValueCommand({
-          SecretId: secretName,
-          VersionStage: "AWSCURRENT",
-        })
-      )
+  try {
+    const response = await client.send(
+      new GetSecretValueCommand({
+        SecretId: secretName,
+        VersionStage: "AWSCURRENT",
+      })
+    )
 
-      secretString = response.SecretString || "{}"
-    } catch (error) {
-      if (error instanceof ResourceNotFoundException) {
-        // The secret was not found, return empty object
-        secretString = "{}"
-      } else {
-        logger.error(error)
-        throw error
-      }
+    secretString = response.SecretString || "{}"
+  } catch (error) {
+    if (error instanceof ResourceNotFoundException) {
+      // The secret was not found, return empty object
+      secretString = "{}"
+    } else {
+      logger.error(error)
+      throw error
     }
   }
 

@@ -1,4 +1,14 @@
 {
   "extends": ["@signmax/config/typescript"],
-  "include": ["**/*.ts", "**/*.tsx"]
+  "include": ["src/**/*.ts"],
+  "exclude": ["node_modules", "dist", "**/*.test.ts"],
+  "compilerOptions": {
+    "noEmit": false,
+    "allowImportingTsExtensions": false,
+    "outDir": "./dist",
+    "declaration": true,
+    "declarationMap": true,
+    "sourceMap": true,
+    "rootDir": "./src"
+  }
 }

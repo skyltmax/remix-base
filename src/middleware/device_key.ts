@@ -1,6 +1,8 @@
 import { randomUUID } from "crypto"
 import { type RequestHandler } from "express"
 
+const HOUR = 1000 * 60 * 60
+
 export interface DeviceKeyMiddlewareOptions {
   cookieName?: string
   maxAge?: number
@@ -9,7 +11,7 @@ export interface DeviceKeyMiddlewareOptions {
 // set a device key cookie to use as anonymous identifier if it doesn't exist
 export const createDeviceKeyMiddleware = (options?: DeviceKeyMiddlewareOptions): RequestHandler => {
   const cookieName = options?.cookieName || "device_key"
-  const maxAge = options?.maxAge ?? 1000 * 60 * 60 * 24 * 365
+  const maxAge = options?.maxAge || HOUR * 24 * 365
 
   return async (req, res, next) => {
     let deviceKey = req.cookies[cookieName]
@@ -30,6 +32,6 @@ export const createDeviceKeyMiddleware = (options?: DeviceKeyMiddlewareOptions):
 }
 
 // Backward compatibility - default export with "sm_device_key"
-export const deviceKeyMiddleware = createDeviceKeyMiddleware({
+export const deviceKeyMiddleware: RequestHandler = createDeviceKeyMiddleware({
   cookieName: "sm_device_key",
 })

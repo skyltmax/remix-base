@@ -23,67 +23,70 @@
   ],
   "sideEffects": false,
   "type": "module",
-  "main": "./src/index.ts",
-  "types": "./src/index.ts",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
   "exports": {
     ".": {
-      "import": "./src/index.ts",
-      "types": "./src/index.ts"
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
     },
     "./server": {
-      "import": "./src/server.ts",
-      "types": "./src/server.ts"
+      "import": "./dist/server.js",
+      "types": "./dist/server.d.ts"
     },
     "./instrumentation": {
-      "import": "./src/instrumentation.ts",
-      "types": "./src/instrumentation.ts"
+      "import": "./dist/instrumentation.js",
+      "types": "./dist/instrumentation.d.ts"
     },
     "./load_context": {
-      "import": "./src/load_context.ts",
-      "types": "./src/load_context.ts"
+      "import": "./dist/load_context.js",
+      "types": "./dist/load_context.d.ts"
     },
     "./logger": {
-      "import": "./src/logger.ts",
-      "types": "./src/logger.ts"
+      "import": "./dist/logger.js",
+      "types": "./dist/logger.d.ts"
     },
     "./metrics": {
-      "import": "./src/metrics.ts",
-      "types": "./src/metrics.ts"
+      "import": "./dist/metrics.js",
+      "types": "./dist/metrics.d.ts"
     },
     "./middleware": {
-      "import": "./src/middleware/index.ts",
-      "types": "./src/middleware/index.ts"
+      "import": "./dist/middleware/index.js",
+      "types": "./dist/middleware/index.d.ts"
     },
     "./test/helpers": {
-      "import": "./src/test/helpers.ts",
-      "types": "./src/test/helpers.ts"
+      "import": "./dist/test/helpers.js",
+      "types": "./dist/test/helpers.d.ts"
     },
     "./util": {
-      "import": "./src/util/index.ts",
-      "types": "./src/util/index.ts"
+      "import": "./dist/util/index.js",
+      "types": "./dist/util/index.d.ts"
     },
     "./client": {
-      "import": "./src/api/client.ts",
-      "types": "./src/api/client.ts"
+      "import": "./dist/api/client.js",
+      "types": "./dist/api/client.d.ts"
     },
     "./secrets": {
-      "import": "./src/secrets.ts",
-      "types": "./src/secrets.ts"
+      "import": "./dist/secrets.js",
+      "types": "./dist/secrets.d.ts"
     },
     "./growthbook": {
-      "import": "./src/growthbook.ts",
-      "types": "./src/growthbook.ts"
+      "import": "./dist/growthbook.js",
+      "types": "./dist/growthbook.d.ts"
     }
   },
   "scripts": {
+    "build": "rm -rf dist && tsc",
     "format": "prettier . --write",
     "lint": "eslint .",
-    "typecheck": "tsc",
+    "typecheck": "tsc --noEmit",
     "validate": "run-p -l format lint typecheck",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "prepublishOnly": "pnpm run build"
   },
   "files": [
+    "dist",
     "src"
   ],
   "prettier": "@signmax/config/prettier",
