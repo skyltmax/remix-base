@@ -41,7 +41,7 @@ import { deviceKeyMiddleware, requestMiddleware } from "@signmax/remix-base/midd
 const build = async () => import("../build/server/index.js")
 
 const options: ServeAppOptions = {
-  middleware: [requestMiddleware, deviceKeyMiddleware],
+  middleware: [requestMiddleware(), deviceKeyMiddleware({ cookieName: "device_id" })],
   getLoadContext: (req, res) => getLoadContext(req, res, { deviceKeyCookieName: "device_id" }),
   trustCloudFrontIPs: true,
 }

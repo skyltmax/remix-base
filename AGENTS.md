@@ -189,7 +189,7 @@ pnpm format
 
 **Patterns:**
 
-- Use factory functions for configurable instances (e.g., `createGrowthBook`, `createDeviceKeyMiddleware`)
+- Use factory functions for configurable instances (e.g., `createGrowthBook`, `deviceKeyMiddleware`)
 - Provide both programmatic and environment-based configuration
 - Maintain backward compatibility when adding new options
 
@@ -281,7 +281,7 @@ All middleware exports a factory function or configured instance:
 - Configurable cookie name and max age
 
 ```typescript
-createDeviceKeyMiddleware({ cookieName: "device_id", maxAge: 31536000000 })
+deviceKeyMiddleware({ cookieName: "device_id", maxAge: 31536000000 })
 ```
 
 **Ending Slash** (`src/middleware/ending_slash.ts`):

@@ -1,4 +1,4 @@
-export default class BrowserDetection {
+export class BrowserDetection {
   static browser(userAgent: string): string {
     if (/Edg/i.test(userAgent)) {
       return "edge"

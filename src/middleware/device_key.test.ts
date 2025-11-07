@@ -12,6 +12,7 @@ const handlers = [gqlOpHandler("AdminState", HttpResponse.json({ data: { current
 
 describe("adminMiddleware", () => {
   const server = setupServer(...handlers)
+  const middleware = deviceKeyMiddleware({ cookieName: "sm_device_key" })
 
   beforeAll(() => {
     server.listen({ onUnhandledRequest: "warn" })
@@ -28,7 +29,7 @@ describe("adminMiddleware", () => {
     const spy = vi.spyOn(response, "cookie")
     const next = vi.fn()
 
-    await deviceKeyMiddleware(request, response, next)
+    await middleware(request, response, next)
 
     expect(spy).toHaveBeenCalledWith("sm_device_key", "mocked-mocked-mocked-mocked-mocked", {
       maxAge: 1000 * 60 * 60 * 24 * 365,
@@ -59,7 +60,7 @@ describe("adminMiddleware", () => {
     const spy = vi.spyOn(response, "cookie")
     const next = vi.fn()
 
-    await deviceKeyMiddleware(request, response, next)
+    await middleware(request, response, next)
 
     expect(spy).not.toHaveBeenCalledWith("sm_device_key", "mocked-mocked-mocked-mocked-mocked", expect.any(Object))
     expect(request.headers.cookie).toContain("sm_device_key=existing-device-key")

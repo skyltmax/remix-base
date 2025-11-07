@@ -4,7 +4,7 @@ import type * as express from "express"
 import { isbot } from "isbot"
 import { type Logger } from "pino"
 import type { RequestFunc } from "./api/client"
-import BrowserDetection from "./util/browser_detection"
+import { BrowserDetection } from "./util/browser_detection"
 import { getRevision } from "./util/revision"
 
 export interface LoadContext {

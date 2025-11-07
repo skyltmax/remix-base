@@ -9,7 +9,7 @@ export interface DeviceKeyMiddlewareOptions {
 }
 
 // set a device key cookie to use as anonymous identifier if it doesn't exist
-export const createDeviceKeyMiddleware = (options?: DeviceKeyMiddlewareOptions): RequestHandler => {
+export const deviceKeyMiddleware = (options?: DeviceKeyMiddlewareOptions): RequestHandler => {
   const cookieName = options?.cookieName || "device_key"
   const maxAge = options?.maxAge || HOUR * 24 * 365
 
@@ -30,8 +30,3 @@ export const createDeviceKeyMiddleware = (options?: DeviceKeyMiddlewareOptions):
     next()
   }
 }
-
-// Backward compatibility - default export with "sm_device_key"
-export const deviceKeyMiddleware: RequestHandler = createDeviceKeyMiddleware({
-  cookieName: "sm_device_key",
-})
