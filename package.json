@@ -76,7 +76,7 @@
     }
   },
   "scripts": {
-    "build": "rm -rf dist && tsc",
+    "build": "rm -rf dist && tsc && cp src/cloudfront-ips/*.json dist/cloudfront-ips/",
     "format": "prettier . --write",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",

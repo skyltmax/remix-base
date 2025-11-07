@@ -1,9 +1,8 @@
 import * as https from "https"
-import fs from "node:fs"
-import path from "node:path"
-import url from "node:url"
 import { type Application } from "express"
 import type pino from "pino"
+import backupIps from "./backup.json" with { type: "json" }
+import vpcIps from "./vpc.json" with { type: "json" }
 
 interface Service {
   ip_prefix: string
@@ -40,7 +39,7 @@ const isServicePrefix = (data: unknown): data is ServicePrefix => {
 export class CloudfrontIpUpdater {
   private readonly logger: pino.Logger
   private lastIps: string[] = []
-  private vpcIps: string[] = []
+  private readonly vpcIps: string[] = []
   private readonly maxRetries: number = 3
   private readonly retryDelay: number = 500 // Initial delay in ms
 
@@ -49,8 +48,8 @@ export class CloudfrontIpUpdater {
     private _apiUrl: string = "https://ip-ranges.amazonaws.com/ip-ranges.json"
   ) {
     this.logger = logger
-    this.lastIps = this.readList("backup.json")
-    this.vpcIps = this.readList("vpc.json")
+    this.lastIps = this.validateIpList(backupIps)
+    this.vpcIps = this.validateIpList(vpcIps)
   }
 
   get apiUrl(): string {
@@ -151,12 +150,7 @@ export class CloudfrontIpUpdater {
     this.logger.info("Updated trust proxy")
   }
 
-  private readList(name: string): string[] {
-    const __filename = url.fileURLToPath(import.meta.url)
-    const __dirname = path.dirname(__filename)
-
-    const list = JSON.parse(fs.readFileSync(path.resolve(__dirname, name), "utf-8"))
-
+  private validateIpList(list: unknown): string[] {
     if (!Array.isArray(list)) {
       return []
     }

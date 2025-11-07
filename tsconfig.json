@@ -1,12 +1,13 @@
 {
   "extends": ["@signmax/config/typescript"],
-  "include": ["src/**/*.ts"],
+  "include": ["src/**/*.ts", "src/**/*.json"],
   "exclude": ["node_modules", "dist"],
   "compilerOptions": {
     "noEmit": false,
     "allowImportingTsExtensions": false,
     "module": "NodeNext",
     "moduleResolution": "NodeNext",
+    "resolveJsonModule": true,
     "outDir": "./dist",
     "declaration": true,
     "declarationMap": true,
