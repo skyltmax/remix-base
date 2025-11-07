@@ -65,12 +65,12 @@ This is a **standalone npm package** providing server utilities for React Router
 ```
 @signmax/remix-base/
 ├── src/
-│   ├── index.ts                    # Main serveApp function
+│   ├── index.ts                    # Package exports
+│   ├── server.ts                   # Main serveApp function
 │   ├── instrumentation.ts          # Sentry initialization
 │   ├── load_context.ts             # Load context factory
 │   ├── logger.ts                   # Pino logger setup
 │   ├── metrics.ts                  # Prometheus metrics
-│   ├── env.ts                      # Environment configuration
 │   ├── secrets.ts                  # AWS Secrets Manager
 │   ├── growthbook.ts               # GrowthBook factory (optional)
 │   ├── api/
@@ -135,12 +135,12 @@ npm install @signmax/remix-base
 ### Basic Usage
 
 ```typescript
-import { serveApp } from "@signmax/remix-base"
+import { serveApp } from "@signmax/remix-base/server"
 import type { ServerBuild } from "react-router"
 
 const build = () => import("./build/server/index.js") as Promise<ServerBuild>
 
-await serveApp(build)
+await serveApp({ build })
 ```
 
 ### Development Setup
@@ -195,24 +195,28 @@ pnpm format
 
 ### Key Modules
 
-#### Server (`src/index.ts`)
+#### Server (`src/server.ts`)
 
 The main `serveApp` function sets up an Express server with:
 
-- CloudFront IP trust proxy (production only)
+- CloudFront IP trust proxy (configurable)
 - Logging, compression, cookie parsing
 - Configurable middleware stack
 - Static asset serving
 - Health check endpoint (`/livez`)
 
-**Function signatures:**
+**Usage:**
 
 ```typescript
-// Backward compatible
-serveApp(build, devServer?, middleware?, getLoadContext?, port?)
+import { serveApp } from "@signmax/remix-base/server"
 
-// Options-based
-serveApp(options: ServeAppOptions)
+await serveApp({
+  build,
+  trustCloudFrontIPs: true, // default
+  middleware: customMiddleware,
+  getLoadContext,
+  port: 4000,
+})
 ```
 
 #### Load Context (`src/load_context.ts`)
@@ -296,6 +300,22 @@ createDeviceKeyMiddleware({ cookieName: "device_id", maxAge: 31536000000 })
 **Request** (`src/middleware/request.ts`):
 
 - Attaches GraphQL request function to `req.request`
+- Factory function `requestMiddleware(options?)` accepts configuration
+- Options: `endpoint`, `sharedSecret`, `sharedSecretHeader`, `passthroughHeaders`, `includeDefaultPassthroughHeaders`,
+  `skipCookies`
+
+```typescript
+const middleware = requestMiddleware({
+  endpoint: "https://api.example.com/graphql",
+  sharedSecret: "secret123",
+  skipCookies: false,
+})
+
+// Or use with defaults
+const defaultMiddleware = requestMiddleware()
+```
+
+````
 
 **Sentry IP** (`src/middleware/sentry_ip.ts`):
 
@@ -309,11 +329,14 @@ Sentry initialization with configurable options:
 import { init, type SentryConfig } from "@signmax/remix-base/instrumentation"
 
 init({
-  denyUrls: [/\/health/, /\/metrics/],
-  tracesSampleRate: 0.1,
-  profilesSampleRate: 0.05,
+  dsn: process.env.SENTRY_DSN!,
+  configuration: {
+    environment: "production",
+    tracesSampleRate: 0.1,
+    profilesSampleRate: 0.05,
+  },
 })
-```
+````
 
 #### Metrics (`src/metrics.ts`)
 
@@ -325,23 +348,14 @@ import { startMetrics } from "@signmax/remix-base/metrics"
 await startMetrics(9394) // port
 ```
 
-#### Environment (`src/env.ts`)
-
-Environment variable exports:
-
-- `IS_DEV`, `IS_PROD` - Environment flags
-- `ENV` - App environment (from `APP_ENV`)
-- `API_HOST`, `API_PORT`, `API_PATH` - API configuration
-- `SHARED_SECRET`, `SHARED_SECRET_HEADER` - Authentication
-- All values have sensible defaults
-
 #### Secrets (`src/secrets.ts`)
 
 AWS Secrets Manager utility - optional for users:
 
 - Provides `loadSecrets()` function
 - Users call it explicitly if needed
-- Configurable secret name and region
+- Requires explicit `secretName`
+- Optional region override (defaults to `AWS_REGION` or `eu-central-1`)
 - Type-safe with generics
 
 **Usage:**
@@ -349,8 +363,7 @@ AWS Secrets Manager utility - optional for users:
 ```typescript
 import { loadSecrets } from "@signmax/remix-base/secrets"
 
-const secrets = await loadSecrets<{ apiKey: string }>({
-  secretName: "my-app/secrets",
+const secrets = await loadSecrets<{ apiKey: string }>("my-app/secrets", {
   region: "us-east-1",
 })
 ```
@@ -476,27 +489,16 @@ Omit `endpoint` to rely on the library default.
 
 ### Environment Variables
 
-All configuration should be environment-based with sensible defaults:
-
-**Required for production:**
-
-- `SENTRY_DSN` - Sentry error tracking
-- `SHARED_SECRET` - API authentication (if using API client)
+Some of the configuration is environment-based with sensible defaults:
 
 **Common overrides:**
 
 - `PORT` - Server port (default: 4000)
-- `APP_ENV` - Application environment (default: NODE_ENV)
-- `API_HOST` - API host (default: localhost)
-- `API_PORT` - API port (default: 3000)
-- `API_PATH` - API endpoint path (default: /graphql)
-- `SHARED_SECRET_HEADER` - Header name (default: x-shared-secret)
 - `BUILD_DIR` - Build directory (default: build/client)
 - `ASSETS_DIR` - Assets directory (default: ${BUILD_DIR}/assets)
 
 **AWS Secrets Manager:**
 
-- `AWS_SECRET_NAME` - Secret name (default: app/env/${APP_ENV})
 - `AWS_REGION` - AWS region (default: eu-central-1)
 
 **Prometheus:**
@@ -516,21 +518,18 @@ interface ServeAppOptions {
   port?: string | number
   buildDir?: string
   assetsDir?: string
-  enableCloudFrontIpUpdater?: boolean
-  enableSentryIPMiddleware?: boolean
-  enableEndingSlashMiddleware?: boolean
-  enableHelmetMiddleware?: boolean
-  enableNoIndexMiddleware?: boolean
+  trustCloudFrontIPs?: boolean
 }
 ```
 
 **Sentry Config:**
 
 ```typescript
+type SentryNodeOptions = import("@sentry/node").NodeOptions
+
 interface SentryConfig {
-  denyUrls?: RegExp[]
-  tracesSampleRate?: number
-  profilesSampleRate?: number
+  dsn: string
+  configuration?: SentryNodeOptions
 }
 ```
 
@@ -563,15 +562,30 @@ interface DeviceKeyMiddlewareOptions {
 }
 ```
 
+**Request Middleware:**
+
+```typescript
+interface RequestMiddlewareOptions extends GraphQLClientOptions {
+  skipCookies?: boolean
+}
+
+interface GraphQLClientOptions {
+  endpoint?: string
+  sharedSecret?: string
+  sharedSecretHeader?: string
+  passthroughHeaders?: string[]
+  includeDefaultPassthroughHeaders?: boolean
+}
+```
+
 ### Adding New Configuration
 
 When adding new configuration options:
 
-1. **Add environment variable** in `src/env.ts` with default
-2. **Document in README.md** under Environment Variables
-3. **Add to interface** if it's an option object
-4. **Maintain backward compatibility** - use optional properties with defaults
-5. **Update AGENTS.md** with usage examples
+1. **Document in README.md** under Environment Variables
+2. **Add to interface** if it's an option object
+3. **Maintain backward compatibility** - use optional properties with defaults
+4. **Update AGENTS.md** with usage examples
 
 ### Backward Compatibility
 

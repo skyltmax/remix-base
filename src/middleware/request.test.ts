@@ -20,7 +20,7 @@ describe("requestMiddleware", () => {
     next = vi.fn()
   })
 
-  it("should attach request function to req", async () => {
+  it("should attach request function to req with default options", async () => {
     const mockRequestFunc = vi.fn()
     const mockResponseMiddleware = vi.fn()
     const { createRequest, createResponseMiddleware } = await import("../api/client")
@@ -28,10 +28,12 @@ describe("requestMiddleware", () => {
     vi.mocked(createResponseMiddleware).mockReturnValue(mockResponseMiddleware)
     vi.mocked(createRequest).mockReturnValue(mockRequestFunc)
 
-    await requestMiddleware(req as Request, res as Response, next)
+    const middleware = requestMiddleware()
 
-    expect(createResponseMiddleware).toHaveBeenCalledWith(req, res)
-    expect(createRequest).toHaveBeenCalledWith(req, res, mockResponseMiddleware)
+    await middleware(req as Request, res as Response, next)
+
+    expect(createResponseMiddleware).toHaveBeenCalledWith(req, res, undefined)
+    expect(createRequest).toHaveBeenCalledWith(req, res, mockResponseMiddleware, {})
     expect((req as Request).request).toBe(mockRequestFunc)
   })
 
@@ -43,7 +45,9 @@ describe("requestMiddleware", () => {
     vi.mocked(createResponseMiddleware).mockReturnValue(mockResponseMiddleware)
     vi.mocked(createRequest).mockReturnValue(mockRequestFunc)
 
-    await requestMiddleware(req as Request, res as Response, next)
+    const middleware = requestMiddleware()
+
+    await middleware(req as Request, res as Response, next)
 
     expect(next).toHaveBeenCalledExactlyOnceWith()
   })
@@ -61,8 +65,78 @@ describe("requestMiddleware", () => {
       return vi.fn()
     })
 
-    await requestMiddleware(req as Request, res as Response, next)
+    const middleware = requestMiddleware()
+
+    await middleware(req as Request, res as Response, next)
 
     expect(callOrder).toEqual(["createResponseMiddleware", "createRequest"])
+  })
+
+  it("should accept GraphQL client options", async () => {
+    const mockRequestFunc = vi.fn()
+    const mockResponseMiddleware = vi.fn()
+    const { createRequest, createResponseMiddleware } = await import("../api/client")
+
+    vi.mocked(createResponseMiddleware).mockReturnValue(mockResponseMiddleware)
+    vi.mocked(createRequest).mockReturnValue(mockRequestFunc)
+
+    const middleware = requestMiddleware({
+      endpoint: "https://api.example.com/graphql",
+      sharedSecret: "secret123",
+      sharedSecretHeader: "x-api-key",
+    })
+
+    await middleware(req as Request, res as Response, next)
+
+    expect(createResponseMiddleware).toHaveBeenCalledWith(req, res, undefined)
+    expect(createRequest).toHaveBeenCalledWith(req, res, mockResponseMiddleware, {
+      endpoint: "https://api.example.com/graphql",
+      sharedSecret: "secret123",
+      sharedSecretHeader: "x-api-key",
+    })
+    expect((req as Request).request).toBe(mockRequestFunc)
+    expect(next).toHaveBeenCalledExactlyOnceWith()
+  })
+
+  it("should pass skipCookies option to createResponseMiddleware", async () => {
+    const mockRequestFunc = vi.fn()
+    const mockResponseMiddleware = vi.fn()
+    const { createRequest, createResponseMiddleware } = await import("../api/client")
+
+    vi.mocked(createResponseMiddleware).mockReturnValue(mockResponseMiddleware)
+    vi.mocked(createRequest).mockReturnValue(mockRequestFunc)
+
+    const middleware = requestMiddleware({
+      skipCookies: true,
+      endpoint: "https://api.example.com/graphql",
+    })
+
+    await middleware(req as Request, res as Response, next)
+
+    expect(createResponseMiddleware).toHaveBeenCalledWith(req, res, true)
+    expect(createRequest).toHaveBeenCalledWith(req, res, mockResponseMiddleware, {
+      endpoint: "https://api.example.com/graphql",
+    })
+  })
+
+  it("should pass passthrough headers options", async () => {
+    const mockRequestFunc = vi.fn()
+    const mockResponseMiddleware = vi.fn()
+    const { createRequest, createResponseMiddleware } = await import("../api/client")
+
+    vi.mocked(createResponseMiddleware).mockReturnValue(mockResponseMiddleware)
+    vi.mocked(createRequest).mockReturnValue(mockRequestFunc)
+
+    const middleware = requestMiddleware({
+      passthroughHeaders: ["x-custom-header"],
+      includeDefaultPassthroughHeaders: false,
+    })
+
+    await middleware(req as Request, res as Response, next)
+
+    expect(createRequest).toHaveBeenCalledWith(req, res, mockResponseMiddleware, {
+      passthroughHeaders: ["x-custom-header"],
+      includeDefaultPassthroughHeaders: false,
+    })
   })
 })

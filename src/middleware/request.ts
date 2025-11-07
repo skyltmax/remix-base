@@ -1,5 +1,7 @@
 import { type RequestHandler } from "express"
-import { createRequest, createResponseMiddleware, type RequestFunc } from "../api/client"
+import { createRequest, createResponseMiddleware, type GraphQLClientOptions, type RequestFunc } from "../api/client"
+
+export type { GraphQLClientOptions } from "../api/client"
 
 declare module "http" {
   interface IncomingMessage {
@@ -7,7 +9,14 @@ declare module "http" {
   }
 }
 
-export const requestMiddleware: RequestHandler = async (req, res, next) => {
-  req.request = createRequest(req, res, createResponseMiddleware(req, res))
-  next()
+export interface RequestMiddlewareOptions extends GraphQLClientOptions {
+  skipCookies?: boolean
+}
+
+export const requestMiddleware = (options?: RequestMiddlewareOptions): RequestHandler => {
+  return async (req, res, next) => {
+    const { skipCookies, ...clientOptions } = options ?? {}
+    req.request = createRequest(req, res, createResponseMiddleware(req, res, skipCookies), clientOptions)
+    next()
+  }
 }

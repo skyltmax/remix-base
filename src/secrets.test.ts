@@ -28,6 +28,7 @@ vi.mock("./logger", () => ({
 
 describe("loadSecrets", () => {
   const mockSend = vi.fn()
+  const defaultSecretName = "app/env/test"
 
   beforeEach(() => {
     vi.clearAllMocks()
@@ -46,7 +47,7 @@ describe("loadSecrets", () => {
       SecretString: JSON.stringify(mockSecrets),
     })
 
-    const secrets = await loadSecrets()
+    const secrets = await loadSecrets(defaultSecretName)
 
     expect(secrets).toEqual(mockSecrets)
     expect(SecretsManagerClient).toHaveBeenCalledWith({
@@ -61,10 +62,7 @@ describe("loadSecrets", () => {
       SecretString: JSON.stringify(mockSecrets),
     })
 
-    await loadSecrets({
-      secretName: "my-app/production",
-      region: "us-east-1",
-    })
+    await loadSecrets("my-app/production", { region: "us-east-1" })
 
     expect(SecretsManagerClient).toHaveBeenCalledWith({ region: "us-east-1" })
     expect(GetSecretValueCommand).toHaveBeenCalledWith({
@@ -73,8 +71,7 @@ describe("loadSecrets", () => {
     })
   })
 
-  it("should use environment variables for secret name and region", async () => {
-    process.env.AWS_SECRET_NAME = "env-secret"
+  it("should use environment variables for region", async () => {
     process.env.AWS_REGION = "ap-southeast-1"
 
     const mockSecrets = { envKey: "envValue" }
@@ -82,17 +79,13 @@ describe("loadSecrets", () => {
       SecretString: JSON.stringify(mockSecrets),
     })
 
-    await loadSecrets()
+    await loadSecrets(defaultSecretName)
 
     expect(SecretsManagerClient).toHaveBeenCalledWith({
       region: "ap-southeast-1",
     })
-    expect(GetSecretValueCommand).toHaveBeenCalledWith({
-      SecretId: "env-secret",
-      VersionStage: "AWSCURRENT",
-    })
+    expect(GetSecretValueCommand).toHaveBeenCalledWith({ SecretId: defaultSecretName, VersionStage: "AWSCURRENT" })
 
-    delete process.env.AWS_SECRET_NAME
     delete process.env.AWS_REGION
   })
 
@@ -103,7 +96,7 @@ describe("loadSecrets", () => {
     })
     mockSend.mockRejectedValue(notFoundError)
 
-    const secrets = await loadSecrets()
+    const secrets = await loadSecrets(defaultSecretName)
 
     expect(secrets).toEqual({})
   })
@@ -113,7 +106,7 @@ describe("loadSecrets", () => {
       SecretString: undefined,
     })
 
-    const secrets = await loadSecrets()
+    const secrets = await loadSecrets(defaultSecretName)
 
     expect(secrets).toEqual({})
   })
@@ -122,7 +115,7 @@ describe("loadSecrets", () => {
     const error = new Error("Network error")
     mockSend.mockRejectedValue(error)
 
-    await expect(loadSecrets()).rejects.toThrow("Network error")
+    await expect(loadSecrets(defaultSecretName)).rejects.toThrow("Network error")
   })
 
   it("should work with typed secrets", async () => {
@@ -136,7 +129,7 @@ describe("loadSecrets", () => {
       SecretString: JSON.stringify(mockSecrets),
     })
 
-    const secrets = await loadSecrets<MySecrets>()
+    const secrets = await loadSecrets<MySecrets>(defaultSecretName)
 
     expect(secrets.apiKey).toBe("test-key")
     expect(secrets.dbPassword).toBe("secret123")
@@ -157,7 +150,7 @@ describe("loadSecrets", () => {
       SecretString: JSON.stringify(mockSecrets),
     })
 
-    const secrets = await loadSecrets()
+    const secrets = await loadSecrets(defaultSecretName)
 
     expect(secrets).toEqual(mockSecrets)
   })

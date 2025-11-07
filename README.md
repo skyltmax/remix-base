@@ -2,7 +2,8 @@
 
 **Production-ready server and shared utilities for React Router 7 apps.**
 
-`@signmax/remix-base` bundles an opinionated Express 5 setup, middleware suite, instrumentation, and utilities so you can ship React Router (Remix) projects without re-writing the same server glue.
+`@signmax/remix-base` bundles an opinionated Express 5 setup, middleware suite, instrumentation, and utilities so you
+can ship React Router (Remix) projects without re-writing the same server glue.
 
 ## Quick Start
 
@@ -16,7 +17,7 @@ import type { ServerBuild } from "react-router"
 
 const build = () => import("./build/server/index.js") as Promise<ServerBuild>
 
-await serveApp({ build })
+await serveApp(build, {})
 ```
 
 ## What You Get
@@ -40,16 +41,16 @@ import { deviceKeyMiddleware, requestMiddleware } from "@signmax/remix-base/midd
 const build = async () => import("../build/server/index.js")
 
 const options: ServeAppOptions = {
-  build,
   middleware: [requestMiddleware, deviceKeyMiddleware],
   getLoadContext: (req, res) => getLoadContext(req, res, { deviceKeyCookieName: "device_id" }),
-  enableCloudFrontIpUpdater: true,
+  trustCloudFrontIPs: true,
 }
 
-await serveApp(options)
+await serveApp(build, options)
 ```
 
-In development, pass a Vite dev server (`devServer: viteServer.middlewares`) and call `startMetrics()` when you want a Prometheus endpoint.
+In development, pass a Vite dev server (`devServer: viteServer.middlewares`) and call `startMetrics()` when you want a
+Prometheus endpoint.
 
 ## Middleware & Utilities
 
@@ -75,7 +76,24 @@ import {
 ```
 
 - CSP middleware ships with nonce support; call `createCspMiddleware` for custom policies.
-- `requestMiddleware` attaches a GraphQL request helper to `req.request`.
+- `requestMiddleware` is a factory that accepts GraphQL client options and returns middleware that attaches a GraphQL
+  request helper to `req.request`:
+
+  ```typescript
+  import { requestMiddleware } from "@signmax/remix-base/middleware"
+
+  const customRequestMiddleware = requestMiddleware({
+    endpoint: "https://api.example.com/graphql",
+    sharedSecret: process.env.SHARED_SECRET,
+    sharedSecretHeader: "x-api-key",
+    passthroughHeaders: ["x-tenant-id"],
+    skipCookies: false,
+  })
+
+  // Or use with default options
+  const defaultRequestMiddleware = requestMiddleware()
+  ```
+
 - Utility exports cover HTTP headers, server timing, revision lookup, and user-agent parsing helpers.
 
 ## Logging & Metrics
@@ -89,7 +107,8 @@ logger.info("Application started")
 const metrics = await startMetrics({ port: 9394 })
 ```
 
-`startMetrics` spins up a dedicated Express app exposing `/metrics` and returns a handle so you can stop the server during shutdown.
+`startMetrics` spins up a dedicated Express app exposing `/metrics` and returns a handle so you can stop the server
+during shutdown.
 
 ## GraphQL Client
 
@@ -113,13 +132,12 @@ Set `includeDefaultPassthroughHeaders` to `false` when you want complete control
 ```typescript
 import { loadSecrets } from "@signmax/remix-base/secrets"
 
-const secrets = await loadSecrets<{ apiKey: string }>({
-  secretName: "my-app/production",
+const secrets = await loadSecrets<{ apiKey: string }>("my-app/production", {
   region: "us-east-1",
 })
 ```
 
-Defaults read `AWS_SECRET_NAME`, `AWS_REGION`, and fall back to `app/env/${APP_ENV}` in `eu-central-1`.
+The region falls back to `AWS_REGION` or `eu-central-1`.
 
 ## Optional Integrations
 
@@ -129,7 +147,15 @@ Defaults read `AWS_SECRET_NAME`, `AWS_REGION`, and fall back to `app/env/${APP_E
   import { init } from "@signmax/remix-base/instrumentation"
 
   if (process.env.SENTRY_DSN) {
-    init({ denyUrls: [/\/health/, /\/metrics/], tracesSampleRate: 0.1 })
+    init({
+      dsn: process.env.SENTRY_DSN,
+      configuration: {
+        environment: "production",
+        tracesSampleRate: 0.1,
+        profilesSampleRate: 0.05,
+        sendDefaultPii: false,
+      },
+    })
   }
   ```
 
@@ -147,13 +173,10 @@ Defaults read `AWS_SECRET_NAME`, `AWS_REGION`, and fall back to `app/env/${APP_E
 ## Environment Variables
 
 - `NODE_ENV` – sets development/production mode
-- `APP_ENV` – logical environment label for telemetry and secrets (defaults to `NODE_ENV`)
 - `PORT` – HTTP port (`4000` by default)
 - `BUILD_DIR` – static asset root (`build/client` by default)
 - `ASSETS_DIR` – fingerprinted assets directory (defaults to `${BUILD_DIR}/assets`)
 - `PROMETHEUS_EXPORTER_PORT` – metrics server port (`9394` by default)
-- `SENTRY_DSN` – enables Sentry instrumentation when defined
-- `AWS_SECRET_NAME` – Secrets Manager name (defaults to `app/env/${APP_ENV}`)
 - `AWS_REGION` – Secrets Manager region (`eu-central-1` by default)
 - `GIT_REV` – optional release/commit override for logging and Sentry
 

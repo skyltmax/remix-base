@@ -1,9 +1,7 @@
 import { SecretsManagerClient, GetSecretValueCommand, ResourceNotFoundException } from "@aws-sdk/client-secrets-manager"
-import { ENV } from "./env"
 import logger from "./logger"
 
 export interface LoadSecretsOptions {
-  secretName?: string
   region?: string
 }
 
@@ -24,14 +22,19 @@ export interface Secrets {
  *   dbPassword: string
  * }
  *
- * const secrets = await loadSecrets<MySecrets>({
- *   secretName: "my-app/secrets",
- *   region: "us-east-1"
+ * const secrets = await loadSecrets<MySecrets>("my-app/secrets", {
+ *   region: "us-east-1",
  * })
  * ```
  */
-export async function loadSecrets<T extends Secrets = Secrets>(options?: LoadSecretsOptions): Promise<T> {
-  const secretName = options?.secretName || process.env.AWS_SECRET_NAME || `app/env/${ENV}`
+export async function loadSecrets<T extends Secrets = Secrets>(
+  secretName: string,
+  options?: LoadSecretsOptions
+): Promise<T> {
+  if (!secretName) {
+    throw new Error("loadSecrets requires a non-empty secretName")
+  }
+
   const region = options?.region || process.env.AWS_REGION || "eu-central-1"
 
   const client = new SecretsManagerClient({ region })

@@ -9,7 +9,6 @@ import express, { type Express, type RequestHandler } from "express"
 import getPort from "get-port"
 import { type ServerBuild } from "react-router"
 import { CloudfrontIpUpdater } from "./cloudfront-ips/updater"
-import { IS_PROD } from "./env"
 import logger, { expressLogger } from "./logger"
 import { cspMiddleware } from "./middleware/csp"
 import { endingSlashMiddleware } from "./middleware/ending_slash"
@@ -18,14 +17,13 @@ import { noIndexMiddleware } from "./middleware/noindex"
 import { sentryIPMiddleware } from "./middleware/sentry_ip"
 
 export interface ServeAppOptions {
-  build: () => Promise<ServerBuild>
   devServer?: RequestHandler
   middleware?: RequestHandler[]
   getLoadContext?: GetLoadContextFunction
   port?: string | number
   buildDir?: string
   assetsDir?: string
-  enableCloudFrontIpUpdater?: boolean
+  trustCloudFrontIPs?: boolean
 }
 
 export interface ServeAppHandle {
@@ -43,20 +41,22 @@ export const createDefaultMiddleware = (): RequestHandler[] => [
   cspMiddleware,
 ]
 
-export async function serveApp({
-  build,
-  devServer,
-  middleware,
-  getLoadContext,
-  port = process.env.PORT || 4000,
-  buildDir,
-  assetsDir,
-  enableCloudFrontIpUpdater = true,
-}: ServeAppOptions): Promise<ServeAppHandle> {
+export async function serveApp(
+  build: ServerBuild | (() => Promise<ServerBuild>),
+  {
+    devServer,
+    middleware,
+    getLoadContext,
+    port = process.env.PORT || 4000,
+    buildDir,
+    assetsDir,
+    trustCloudFrontIPs = true,
+  }: ServeAppOptions
+): Promise<ServeAppHandle> {
   const app = express()
   let cloudfrontUpdaterInterval: NodeJS.Timeout | undefined
 
-  if (IS_PROD && enableCloudFrontIpUpdater) {
+  if (trustCloudFrontIPs) {
     const ipUpdater = new CloudfrontIpUpdater(logger)
     try {
       await ipUpdater.updateTrustProxy(app)

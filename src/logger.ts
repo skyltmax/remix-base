@@ -1,7 +1,6 @@
 import { randomUUID } from "node:crypto"
 import pino, { type LoggerOptions } from "pino"
 import pinohttp, { type Options as HttpLoggerOpts } from "pino-http"
-import { IS_DEV } from "./env"
 
 const loggerOpts: LoggerOptions = {
   timestamp: pino.stdTimeFunctions.isoTime,
@@ -15,7 +14,7 @@ const loggerOpts: LoggerOptions = {
 }
 
 export const logger = pino(
-  IS_DEV
+  process.env.NODE_ENV !== "production"
     ? {
         ...loggerOpts,
         transport: {
@@ -73,7 +72,7 @@ const expressLoggerOpts: HttpLoggerOpts = {
 }
 
 export const expressLogger = pinohttp(
-  IS_DEV
+  process.env.NODE_ENV !== "production"
     ? {
         ...expressLoggerOpts,
 
