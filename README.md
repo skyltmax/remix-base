@@ -1,114 +1,57 @@
 # @signmax/remix-base
 
-**Server and shared utilities for React Router 7 projects.**
+**Production-ready server and shared utilities for React Router 7 apps.**
 
-This package provides a production-ready server setup and common utilities for React Router 7 (formerly Remix)
-applications, including Express server configuration, middleware, logging, metrics, and AWS integration.
+`@signmax/remix-base` bundles an opinionated Express 5 setup, middleware suite, instrumentation, and utilities so you can ship React Router (Remix) projects without re-writing the same server glue.
 
-## Installation
+## Quick Start
 
 ```bash
 npm install @signmax/remix-base
 ```
 
-## Usage
-
-### Basic Server Setup
-
-The simplest setup with defaults:
-
 ```typescript
-import { serveApp } from "@signmax/remix-base"
+import { serveApp } from "@signmax/remix-base/server"
 import type { ServerBuild } from "react-router"
 
 const build = () => import("./build/server/index.js") as Promise<ServerBuild>
 
-await serveApp(build)
+await serveApp({ build })
 ```
 
-### Complete Example with Custom Context
+## What You Get
 
-Here's a complete example showing how to set up the server with custom middleware, load context, and Sentry
-instrumentation:
+- Express 5 server with sensible defaults and CloudFront-aware proxy trust
+- Middleware bundle (Helmet, CSP, no-index, trailing slash guard, Sentry IP) plus optional device-key helper
+- Structured logging via Pino and Prometheus metrics endpoint
+- GraphQL helpers with cookie pass-through and shared-secret auth
+- Load context utilities, GrowthBook integration, and AWS Secrets Manager helper
+- TypeScript-first API with comprehensive tests
+
+## Server Setup
+
+Switch to the options object when you need control over middleware, dev servers, or context creation:
 
 ```typescript
-import { serveApp } from "@signmax/remix-base"
-import { getLoadContext, type LoadContext } from "@signmax/remix-base/load_context"
-import { startMetrics } from "@signmax/remix-base/metrics"
+import { serveApp, type ServeAppOptions } from "@signmax/remix-base/server"
+import { getLoadContext } from "@signmax/remix-base/load_context"
 import { deviceKeyMiddleware, requestMiddleware } from "@signmax/remix-base/middleware"
-import { type AppLoadContext, type ServerBuild } from "react-router"
 
-// Initialize Sentry if configured
-if (process.env.SENTRY_DSN) {
-  void import("@signmax/remix-base/instrumentation").then(({ init }) => init())
-}
+const build = async () => import("../build/server/index.js")
 
-// Start Prometheus metrics server
-await startMetrics()
-
-// Development server setup
-const viteDevServer =
-  process.env.NODE_ENV === "development"
-    ? await import("vite").then(vite =>
-        vite.createServer({
-          server: { middlewareMode: true },
-        })
-      )
-    : null
-
-const build: () => Promise<ServerBuild> = viteDevServer
-  ? () => viteDevServer.ssrLoadModule("virtual:react-router/server-build") as Promise<ServerBuild>
-  : async () => import("../build/server/index.js")
-
-// Extend the base load context with your app-specific properties
-declare module "react-router" {
-  interface AppLoadContext extends LoadContext {
-    // Add your custom properties here
-    locale: string
-    userId?: string
-  }
-}
-
-await serveApp(
+const options: ServeAppOptions = {
   build,
-  viteDevServer?.middlewares,
-  [requestMiddleware, deviceKeyMiddleware /* add your custom middleware */],
-  (req, res) => {
-    const baseContext = getLoadContext(req, res)
+  middleware: [requestMiddleware, deviceKeyMiddleware],
+  getLoadContext: (req, res) => getLoadContext(req, res, { deviceKeyCookieName: "device_id" }),
+  enableCloudFrontIpUpdater: true,
+}
 
-    const context: AppLoadContext = {
-      ...baseContext,
-      locale: req.cookies.locale || "en",
-      userId: req.cookies.user_id,
-    }
-
-    // Optionally update GrowthBook attributes with user data
-    if (context.growthbook) {
-      context.growthbook.updateAttributes({
-        userId: context.userId,
-        locale: context.locale,
-      })
-    }
-
-    return context
-  }
-)
+await serveApp(options)
 ```
 
-This automatically includes:
+In development, pass a Vite dev server (`devServer: viteServer.middlewares`) and call `startMetrics()` when you want a Prometheus endpoint.
 
-- CloudFront IP trust proxy configuration (production only)
-- Compression
-- Cookie parsing
-- Logging with Pino
-- Sentry error tracking
-- Security headers (Helmet, CSP)
-- No-index middleware
-- Static asset serving with proper cache headers
-
-### Middleware
-
-Import individual middleware as needed:
+## Middleware & Utilities
 
 ```typescript
 import {
@@ -117,227 +60,118 @@ import {
   endingSlashMiddleware,
   helmetMiddleware,
   noIndexMiddleware,
+  requestMiddleware,
   sentryIPMiddleware,
 } from "@signmax/remix-base/middleware"
+
+import {
+  BrowserDetection,
+  pipeHeaders,
+  getConservativeCacheControl,
+  makeTimings,
+  time,
+  getRevision,
+} from "@signmax/remix-base/util"
 ```
 
-### Utilities
+- CSP middleware ships with nonce support; call `createCspMiddleware` for custom policies.
+- `requestMiddleware` attaches a GraphQL request helper to `req.request`.
+- Utility exports cover HTTP headers, server timing, revision lookup, and user-agent parsing helpers.
 
-```typescript
-import { headers, timing } from "@signmax/remix-base/util"
-```
-
-Includes utilities for:
-
-- Browser detection
-- Request header handling
-- Server timing metrics
-- Revision tracking
-
-### Logger
-
-Access the pre-configured Pino logger:
+## Logging & Metrics
 
 ```typescript
 import logger from "@signmax/remix-base/logger"
+import { startMetrics } from "@signmax/remix-base/metrics"
 
 logger.info("Application started")
-logger.error({ err }, "Error occurred")
+
+const metrics = await startMetrics({ port: 9394 })
 ```
 
-### Metrics
+`startMetrics` spins up a dedicated Express app exposing `/metrics` and returns a handle so you can stop the server during shutdown.
 
-Prometheus metrics collection:
+## GraphQL Client
 
 ```typescript
-import { metrics } from "@signmax/remix-base/metrics"
+import { createClient, createRequest, createResponseMiddleware } from "@signmax/remix-base/client"
+
+const gqlClient = createClient({
+  endpoint: "https://api.example.com/graphql",
+  sharedSecret: process.env.SHARED_SECRET,
+})
+
+const requestFn = createRequest(req, res, createResponseMiddleware(req, res), {
+  passthroughHeaders: ["x-tenant-id"],
+})
 ```
 
-### API Client
+Set `includeDefaultPassthroughHeaders` to `false` when you want complete control over forwarded headers.
 
-GraphQL client utilities:
-
-```typescript
-import { createClient } from "@signmax/remix-base/client"
-```
-
-### Test Helpers
-
-Testing utilities for your test suite:
+## AWS Secrets Manager
 
 ```typescript
-import { mockRequest, mockResponse } from "@signmax/remix-base/test/helpers"
-```
+import { loadSecrets } from "@signmax/remix-base/secrets"
 
-### AWS Secrets Manager
-
-Optional utility for loading secrets from AWS Secrets Manager:
-
-```typescript
-import { loadSecrets, type Secrets } from "@signmax/remix-base/secrets"
-
-// Load secrets with defaults (uses AWS_SECRET_NAME or app/env/${APP_ENV})
-const secrets = await loadSecrets()
-
-// Or specify custom options
-const secrets = await loadSecrets({
+const secrets = await loadSecrets<{ apiKey: string }>({
   secretName: "my-app/production",
   region: "us-east-1",
 })
-
-// Type the secrets by extending the Secrets interface
-interface MySecrets extends Secrets {
-  apiKey: string
-  dbPassword: string
-}
-
-const secrets = await loadSecrets<MySecrets>()
-// secrets.apiKey is typed as string
 ```
 
-## Features
+Defaults read `AWS_SECRET_NAME`, `AWS_REGION`, and fall back to `app/env/${APP_ENV}` in `eu-central-1`.
 
-- **Production-ready Express server** with sensible defaults
-- **CloudFront IP updater** for proper client IP tracking behind AWS CloudFront
-- **Security middleware** including Helmet and CSP
-- **Logging** with Pino (structured JSON logging)
-- **Metrics** with Prometheus client
-- **Sentry integration** for error tracking and profiling
-- **AWS Secrets Manager** integration
-- **GrowthBook** feature flag support
-- **TypeScript** first-class support
+## Optional Integrations
+
+- **Sentry** – call `init` when `SENTRY_DSN` is set.
+
+  ```typescript
+  import { init } from "@signmax/remix-base/instrumentation"
+
+  if (process.env.SENTRY_DSN) {
+    init({ denyUrls: [/\/health/, /\/metrics/], tracesSampleRate: 0.1 })
+  }
+  ```
+
+- **GrowthBook** – install `@growthbook/growthbook` + `eventsource` and pass the instance via `getLoadContext`.
+
+  ```typescript
+  import { createGrowthBook } from "@signmax/remix-base/growthbook"
+  import { getLoadContext } from "@signmax/remix-base/load_context"
+
+  const growthbook = await createGrowthBook({ apiHost: "https://cdn.growthbook.io", clientKey: "key" })
+
+  const getContext = (req, res) => getLoadContext(req, res, { growthbook })
+  ```
 
 ## Environment Variables
 
-The package respects common environment variables:
+- `NODE_ENV` – sets development/production mode
+- `APP_ENV` – logical environment label for telemetry and secrets (defaults to `NODE_ENV`)
+- `PORT` – HTTP port (`4000` by default)
+- `BUILD_DIR` – static asset root (`build/client` by default)
+- `ASSETS_DIR` – fingerprinted assets directory (defaults to `${BUILD_DIR}/assets`)
+- `PROMETHEUS_EXPORTER_PORT` – metrics server port (`9394` by default)
+- `SENTRY_DSN` – enables Sentry instrumentation when defined
+- `AWS_SECRET_NAME` – Secrets Manager name (defaults to `app/env/${APP_ENV}`)
+- `AWS_REGION` – Secrets Manager region (`eu-central-1` by default)
+- `GIT_REV` – optional release/commit override for logging and Sentry
 
-- `NODE_ENV` - Environment (production/development)
-- `PORT` - Server port (default: 4000)
-- `APP_ENV` - Application environment name (defaults to NODE_ENV)
-- `API_HOST` - GraphQL API host (default: localhost)
-- `API_PORT` - GraphQL API port (default: 3000)
-- `API_PATH` - GraphQL API path (default: /graphql)
-- `SHARED_SECRET` - Shared secret for API authentication
-- `SHARED_SECRET_HEADER` - Header name for shared secret (default: x-shared-secret)
-- `BUILD_DIR` - Client build directory (default: build/client)
-- `ASSETS_DIR` - Assets directory (default: ${BUILD_DIR}/assets)
-- `AWS_SECRET_NAME` - AWS Secrets Manager secret name (default: `app/env/${APP_ENV}`)
-- `AWS_REGION` - AWS region (default: eu-central-1)
-- `SENTRY_DSN` - Sentry error tracking
-
-## Configuration
-
-### Server Options
-
-You can customize the server behavior using either the traditional parameters or an options object:
+## Testing Helpers
 
 ```typescript
-import { serveApp, type ServeAppOptions } from "@signmax/remix-base"
-
-// Using options object for fine-grained control
-const options: ServeAppOptions = {
-  build,
-  devServer: viteDevServer?.middlewares,
-  middleware: [requestMiddleware, deviceKeyMiddleware],
-  getLoadContext: (req, res) => getLoadContext(req, res),
-  port: 4000,
-  buildDir: "dist/client",
-  assetsDir: "dist/client/assets",
-  enableCloudFrontIpUpdater: true,
-  enableSentryIPMiddleware: true,
-  enableEndingSlashMiddleware: true,
-  enableHelmetMiddleware: true,
-  enableNoIndexMiddleware: false, // Disable for sites that should be indexed
-}
-
-await serveApp(options)
+import { gqlOpHandler } from "@signmax/remix-base/test/helpers"
 ```
 
-### Sentry Configuration
-
-Customize Sentry initialization:
-
-```typescript
-import { init, type SentryConfig } from "@signmax/remix-base/instrumentation"
-
-const sentryConfig: SentryConfig = {
-  denyUrls: [/\/health/, /\/metrics/],
-  tracesSampleRate: 0.1,
-  profilesSampleRate: 0.05,
-}
-
-if (process.env.SENTRY_DSN) {
-  init(sentryConfig)
-}
-```
-
-### GrowthBook (Optional)
-
-GrowthBook is an optional dependency for feature flagging. To use it:
-
-1. Install the optional dependency:
-
-```bash
-npm install @growthbook/growthbook eventsource
-```
-
-2. Create a GrowthBook instance:
-
-```typescript
-import { createGrowthBook } from "@signmax/remix-base/growthbook"
-import { getLoadContext } from "@signmax/remix-base/load_context"
-
-const growthbook = await createGrowthBook({
-  apiHost: "https://cdn.growthbook.io",
-  clientKey: "your-client-key",
-  timeout: 3000,
-  streaming: true,
-})
-
-const customGetLoadContext = (req, res) => getLoadContext(req, res, { growthbook })
-
-await serveApp(build, undefined, [], customGetLoadContext)
-```
-
-### Device Key Middleware
-
-Customize the device key cookie name:
-
-```typescript
-import { createDeviceKeyMiddleware } from "@signmax/remix-base/middleware"
-
-const deviceKey = createDeviceKeyMiddleware({
-  cookieName: "my_device_id",
-  maxAge: 1000 * 60 * 60 * 24 * 365, // 1 year
-})
-
-await serveApp(build, undefined, [deviceKey])
-```
-
-### Custom API Headers
-
-Pass additional headers to your GraphQL API by configuring the client:
-
-```typescript
-import { createRequest, createResponseMiddleware } from "@signmax/remix-base/api/client"
-
-const requestFn = createRequest(req, res, createResponseMiddleware(req, res), {
-  passthroughHeaders: ["x-custom-auth", "x-tenant-id"],
-})
-```
-
-Set `includeDefaultPassthroughHeaders` to `false` to replace the defaults instead of extending them.
+MSW helpers simplify GraphQL mocking and reuse the package defaults.
 
 ## Publishing
 
-This package is published to npm whenever a GitHub Release is created.
+Releases are driven by GitHub Releases:
 
-How to release:
-
-1. Update version in `package.json`
-2. Update `CHANGELOG.md`
-3. Commit and push changes
-4. Create a Git tag `vX.Y.Z` and a GitHub Release
+1. Update the version in `package.json` and refresh `CHANGELOG.md`.
+2. Commit, push, and tag (`vX.Y.Z`).
+3. Create a GitHub Release; CI publishes to npm.
 
 ## License
 
