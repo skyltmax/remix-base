@@ -5,6 +5,7 @@ export default defineConfig({
   plugins: [tsconfigPaths()],
   test: {
     globals: true,
+    exclude: ["**/node_modules/**", "**/dist/**"],
     outputFile: {
       junit: "../../junit-report.xml",
     },

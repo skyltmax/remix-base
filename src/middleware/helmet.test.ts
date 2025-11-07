@@ -1,4 +1,4 @@
-import { type Request, type Response } from "express"
+import { type NextFunction, type Request, type Response } from "express"
 import { beforeEach, describe, expect, it, vi } from "vitest"
 import { helmetMiddleware } from "./helmet.js"
 
@@ -10,7 +10,7 @@ vi.mock("@nichtsam/helmet/node-http", () => ({
 describe("helmetMiddleware", () => {
   let req: Partial<Request>
   let res: Partial<Response>
-  let next: ReturnType<typeof vi.fn>
+  let next: NextFunction
 
   beforeEach(() => {
     vi.clearAllMocks()
