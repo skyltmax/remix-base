@@ -3,9 +3,9 @@ import * as Sentry from "@sentry/node"
 import type * as express from "express"
 import { isbot } from "isbot"
 import { type Logger } from "pino"
-import type { RequestFunc } from "./api/client"
-import { BrowserDetection } from "./util/browser_detection"
-import { getRevision } from "./util/revision"
+import type { RequestFunc } from "./api/client.js"
+import { BrowserDetection } from "./util/browser_detection.js"
+import { getRevision } from "./util/revision.js"
 
 export interface LoadContext {
   revision?: string

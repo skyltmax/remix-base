@@ -1,6 +1,6 @@
 import { type Request, type Response } from "express"
 import { beforeEach, describe, expect, it, vi } from "vitest"
-import { endingSlashMiddleware } from "./ending_slash"
+import { endingSlashMiddleware } from "./ending_slash.js"
 
 describe("endingSlashMiddleware", () => {
   let req: Partial<Request>

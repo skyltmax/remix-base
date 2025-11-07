@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { BrowserDetection } from "./browser_detection"
+import { BrowserDetection } from "./browser_detection.js"
 
 describe("BrowserDetection", () => {
   describe("browser", () => {

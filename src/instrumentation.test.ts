@@ -1,6 +1,6 @@
 import * as Sentry from "@sentry/node"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
-import { init } from "./instrumentation"
+import { init } from "./instrumentation.js"
 
 vi.mock("@sentry/node", () => ({
   init: vi.fn(),

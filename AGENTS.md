@@ -21,6 +21,7 @@ This document provides comprehensive guidance for AI coding agents working with 
 - Always uphold the configured linter settings - eslint, prettier.
 - Avoid tautologic comments - prefer saying nothing over stating the obvious.
 - Linear git history is required. Avoid cherry-picking etc.
+- All relative imports must include `.js` extensions (for ESM + NodeNext compatibility).
 
 ### Commit message
 
@@ -175,10 +176,17 @@ pnpm format
 
 ### TypeScript Conventions
 
+**Module Resolution:**
+
+- Uses `module: "NodeNext"` and `moduleResolution: "NodeNext"` for proper ESM support
+- All relative imports MUST include `.js` extensions (e.g., `import { foo } from "./bar.js"`)
+- This is required for Node.js ESM compatibility and Vitest execution
+
 **Imports:**
 
 - Use absolute imports from package root
 - Prefer named exports over default exports
+- Always include `.js` extensions for relative imports, even in TypeScript files
 
 **Code Style:**
 

@@ -1,6 +1,6 @@
 import { GrowthBookClient, setPolyfills } from "@growthbook/growthbook"
 import { EventSource } from "eventsource"
-import logger from "./logger"
+import logger from "./logger.js"
 
 setPolyfills({
   EventSource,

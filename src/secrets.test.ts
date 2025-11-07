@@ -1,14 +1,14 @@
 import { GetSecretValueCommand, ResourceNotFoundException, SecretsManagerClient } from "@aws-sdk/client-secrets-manager"
 import { beforeEach, describe, expect, it, vi } from "vitest"
-import { loadSecrets, type Secrets } from "./secrets"
+import { loadSecrets, type Secrets } from "./secrets.js"
 
 // Mock the AWS SDK
 vi.mock("@aws-sdk/client-secrets-manager", () => {
   const mockSend = vi.fn()
   return {
-    SecretsManagerClient: vi.fn(() => ({
-      send: mockSend,
-    })),
+    SecretsManagerClient: vi.fn(function (this: { send: typeof mockSend }) {
+      this.send = mockSend
+    }),
     GetSecretValueCommand: vi.fn(),
     ResourceNotFoundException: class ResourceNotFoundException extends Error {
       constructor(message: string) {
@@ -33,12 +33,9 @@ describe("loadSecrets", () => {
   beforeEach(() => {
     vi.clearAllMocks()
     // Reset the mock implementation
-    vi.mocked(SecretsManagerClient).mockImplementation(
-      () =>
-        ({
-          send: mockSend,
-        }) as unknown as SecretsManagerClient
-    )
+    vi.mocked(SecretsManagerClient).mockImplementation(function (this: { send: typeof mockSend }) {
+      this.send = mockSend
+    } as unknown as () => SecretsManagerClient)
   })
 
   it("should load secrets successfully", async () => {

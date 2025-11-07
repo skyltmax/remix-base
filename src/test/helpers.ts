@@ -1,5 +1,5 @@
 import { type JsonBodyType, type PathParams, type StrictResponse, http } from "msw"
-import { DEFAULT_ENDPOINT } from "../api/client"
+import { DEFAULT_ENDPOINT } from "../api/client.js"
 
 export type GqlPersistedRequestBody = {
   operationName?: string

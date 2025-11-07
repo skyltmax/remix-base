@@ -1,7 +1,7 @@
 import type * as express from "express"
 import { GraphQLClient, ClientError, type ResponseMiddleware } from "graphql-request"
 import setCookie from "set-cookie-parser"
-// import { createPersistedQueryFetch } from "./persisted"
+// import { createPersistedQueryFetch } from "./persisted.js"
 
 export type { ResponseMiddleware } from "graphql-request"
 

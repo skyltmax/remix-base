@@ -1,6 +1,6 @@
 import { type Request, type Response } from "express"
 import { beforeEach, describe, expect, it, vi } from "vitest"
-import { cspMiddleware } from "./csp"
+import { cspMiddleware } from "./csp.js"
 
 describe("cspMiddleware", () => {
   let req: Partial<Request>

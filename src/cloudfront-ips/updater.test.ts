@@ -1,7 +1,7 @@
 import { type Application } from "express"
 import pino from "pino"
 import { beforeEach, describe, expect, it, vi } from "vitest"
-import { CloudfrontIpUpdater } from "./updater"
+import { CloudfrontIpUpdater } from "./updater.js"
 
 // Mock data
 const mockValidResponse = {

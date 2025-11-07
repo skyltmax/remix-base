@@ -1,7 +1,7 @@
 import { type RequestHandler } from "express"
-import { createRequest, createResponseMiddleware, type GraphQLClientOptions, type RequestFunc } from "../api/client"
+import { createRequest, createResponseMiddleware, type GraphQLClientOptions, type RequestFunc } from "../api/client.js"
 
-export type { GraphQLClientOptions } from "../api/client"
+export type { GraphQLClientOptions } from "../api/client.js"
 
 declare module "http" {
   interface IncomingMessage {

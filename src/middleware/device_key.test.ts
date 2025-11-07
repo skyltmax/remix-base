@@ -3,8 +3,8 @@ import { setupServer } from "msw/node"
 import httpMocks from "node-mocks-http"
 import pino from "pino"
 import { describe, it, expect, vi, beforeAll, afterEach } from "vitest"
-import { gqlOpHandler } from "../test/helpers"
-import { deviceKeyMiddleware } from "./device_key"
+import { gqlOpHandler } from "../test/helpers.js"
+import { deviceKeyMiddleware } from "./device_key.js"
 
 vi.mock("crypto", () => ({ randomUUID: vi.fn(() => "mocked-mocked-mocked-mocked-mocked") }))
 

@@ -1,7 +1,7 @@
 import * as Sentry from "@sentry/node"
 import { type Request, type Response } from "express"
 import { beforeEach, describe, expect, it, vi } from "vitest"
-import { sentryIPMiddleware } from "./sentry_ip"
+import { sentryIPMiddleware } from "./sentry_ip.js"
 
 // Mock Sentry
 vi.mock("@sentry/node", () => ({

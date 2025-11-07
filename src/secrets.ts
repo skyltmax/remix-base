@@ -1,5 +1,5 @@
 import { SecretsManagerClient, GetSecretValueCommand, ResourceNotFoundException } from "@aws-sdk/client-secrets-manager"
-import logger from "./logger"
+import logger from "./logger.js"
 
 export interface LoadSecretsOptions {
   region?: string

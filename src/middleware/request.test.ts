@@ -1,6 +1,6 @@
 import { type Request, type Response } from "express"
 import { beforeEach, describe, expect, it, vi } from "vitest"
-import { requestMiddleware } from "./request"
+import { requestMiddleware } from "./request.js"
 
 // Mock the API client module
 vi.mock("../api/client", () => ({
@@ -23,7 +23,7 @@ describe("requestMiddleware", () => {
   it("should attach request function to req with default options", async () => {
     const mockRequestFunc = vi.fn()
     const mockResponseMiddleware = vi.fn()
-    const { createRequest, createResponseMiddleware } = await import("../api/client")
+    const { createRequest, createResponseMiddleware } = await import("../api/client.js")
 
     vi.mocked(createResponseMiddleware).mockReturnValue(mockResponseMiddleware)
     vi.mocked(createRequest).mockReturnValue(mockRequestFunc)
@@ -40,7 +40,7 @@ describe("requestMiddleware", () => {
   it("should call next", async () => {
     const mockRequestFunc = vi.fn()
     const mockResponseMiddleware = vi.fn()
-    const { createRequest, createResponseMiddleware } = await import("../api/client")
+    const { createRequest, createResponseMiddleware } = await import("../api/client.js")
 
     vi.mocked(createResponseMiddleware).mockReturnValue(mockResponseMiddleware)
     vi.mocked(createRequest).mockReturnValue(mockRequestFunc)
@@ -54,7 +54,7 @@ describe("requestMiddleware", () => {
 
   it("should create response middleware before request", async () => {
     const callOrder: string[] = []
-    const { createRequest, createResponseMiddleware } = await import("../api/client")
+    const { createRequest, createResponseMiddleware } = await import("../api/client.js")
 
     vi.mocked(createResponseMiddleware).mockImplementation(() => {
       callOrder.push("createResponseMiddleware")
@@ -75,7 +75,7 @@ describe("requestMiddleware", () => {
   it("should accept GraphQL client options", async () => {
     const mockRequestFunc = vi.fn()
     const mockResponseMiddleware = vi.fn()
-    const { createRequest, createResponseMiddleware } = await import("../api/client")
+    const { createRequest, createResponseMiddleware } = await import("../api/client.js")
 
     vi.mocked(createResponseMiddleware).mockReturnValue(mockResponseMiddleware)
     vi.mocked(createRequest).mockReturnValue(mockRequestFunc)
@@ -101,7 +101,7 @@ describe("requestMiddleware", () => {
   it("should pass skipCookies option to createResponseMiddleware", async () => {
     const mockRequestFunc = vi.fn()
     const mockResponseMiddleware = vi.fn()
-    const { createRequest, createResponseMiddleware } = await import("../api/client")
+    const { createRequest, createResponseMiddleware } = await import("../api/client.js")
 
     vi.mocked(createResponseMiddleware).mockReturnValue(mockResponseMiddleware)
     vi.mocked(createRequest).mockReturnValue(mockRequestFunc)
@@ -122,7 +122,7 @@ describe("requestMiddleware", () => {
   it("should pass passthrough headers options", async () => {
     const mockRequestFunc = vi.fn()
     const mockResponseMiddleware = vi.fn()
-    const { createRequest, createResponseMiddleware } = await import("../api/client")
+    const { createRequest, createResponseMiddleware } = await import("../api/client.js")
 
     vi.mocked(createResponseMiddleware).mockReturnValue(mockResponseMiddleware)
     vi.mocked(createRequest).mockReturnValue(mockRequestFunc)

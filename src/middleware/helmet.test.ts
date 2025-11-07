@@ -1,6 +1,6 @@
 import { type Request, type Response } from "express"
 import { beforeEach, describe, expect, it, vi } from "vitest"
-import { helmetMiddleware } from "./helmet"
+import { helmetMiddleware } from "./helmet.js"
 
 // Mock @nichtsam/helmet
 vi.mock("@nichtsam/helmet/node-http", () => ({

@@ -4,8 +4,8 @@ import { setupServer } from "msw/node"
 import httpMocks from "node-mocks-http"
 import pino from "pino"
 import { afterEach, beforeAll, describe, expect, it, vi } from "vitest"
-import { gqlOpHandler } from "../test/helpers"
-import { createRequest, createResponseMiddleware } from "./client"
+import { gqlOpHandler } from "../test/helpers.js"
+import { createRequest, createResponseMiddleware } from "./client.js"
 
 const handlers = [
   gqlOpHandler(

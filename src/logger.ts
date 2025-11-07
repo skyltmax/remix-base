@@ -1,6 +1,11 @@
 import { randomUUID } from "node:crypto"
 import pino, { type LoggerOptions } from "pino"
-import pinohttp, { type Options as HttpLoggerOpts } from "pino-http"
+
+import pinohttpImport, { type Options as HttpLoggerOpts } from "pino-http"
+
+// pino-http doesn't properly export as ESM, so we need to handle both CJS and ESM
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const pinoHttp: any = "default" in pinohttpImport ? pinohttpImport.default : pinohttpImport
 
 const loggerOpts: LoggerOptions = {
   timestamp: pino.stdTimeFunctions.isoTime,
@@ -71,7 +76,7 @@ const expressLoggerOpts: HttpLoggerOpts = {
   },
 }
 
-export const expressLogger = pinohttp(
+export const expressLogger = pinoHttp(
   process.env.NODE_ENV !== "production"
     ? {
         ...expressLoggerOpts,
@@ -79,17 +84,14 @@ export const expressLogger = pinohttp(
         quietReqLogger: true,
         quietResLogger: true,
 
-        customReceivedMessage: function (req) {
-          return `Started ${req.method} "${req.url}" for ${req.socket.remoteAddress}`
-        },
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        customReceivedMessage: (req: any) => `Started ${req.method} "${req.url}" for ${req.socket.remoteAddress}`,
 
-        customSuccessMessage: function (req, res) {
-          return `Completed ${res.statusCode}`
-        },
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        customSuccessMessage: (_req: any, res: any) => `Completed ${res.statusCode}`,
 
-        customErrorMessage: function (req, res) {
-          return `Failed ${res.statusCode}`
-        },
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        customErrorMessage: (_req: any, res: any) => `Failed ${res.statusCode}`,
       }
     : expressLoggerOpts
 )

@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest"
-import { combineServerTimings, getServerTimeHeader, makeTimings, time, type Timings } from "./timing.server"
+import { combineServerTimings, getServerTimeHeader, makeTimings, time, type Timings } from "./timing.server.js"
 
 describe("timing.server", () => {
   beforeEach(() => {

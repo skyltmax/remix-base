@@ -1,6 +1,6 @@
 import { format, parse } from "@tusbar/cache-control"
 import { describe, expect, it } from "vitest"
-import { getConservativeCacheControl, pipeHeaders } from "./headers.server"
+import { getConservativeCacheControl, pipeHeaders } from "./headers.server.js"
 
 describe("getConservativeCacheControl", () => {
   it("works for basic usecase", () => {

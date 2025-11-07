@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest"
-import { createPersistedQueryFetch } from "./persisted"
+import { createPersistedQueryFetch } from "./persisted.js"
 
 describe("createPersistedQueryFetch", () => {
   let mockFetch: ReturnType<typeof vi.fn>

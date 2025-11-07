@@ -1,6 +1,6 @@
 import child_process from "node:child_process"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
-import { getRevision } from "./revision"
+import { getRevision } from "./revision.js"
 
 vi.mock("node:child_process")
 

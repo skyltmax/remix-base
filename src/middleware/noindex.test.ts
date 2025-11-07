@@ -1,6 +1,6 @@
 import { type Request, type Response } from "express"
 import { beforeEach, describe, expect, it, vi } from "vitest"
-import { noIndexMiddleware } from "./noindex"
+import { noIndexMiddleware } from "./noindex.js"
 
 describe("noIndexMiddleware", () => {
   let req: Partial<Request>

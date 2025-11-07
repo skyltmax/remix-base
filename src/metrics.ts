@@ -11,7 +11,7 @@ import {
   type Registry as PromRegistry,
   type RegistryContentType,
 } from "prom-client"
-import logger, { expressLogger } from "./logger"
+import logger, { expressLogger } from "./logger.js"
 
 export interface MetricsServerHandle {
   stop: () => Promise<void>
