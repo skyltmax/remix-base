@@ -1,1 +1,1 @@
-import "@signmax/config/reset.d.ts"
+import "@skyltmax/config/reset.d.ts"

@@ -1,5 +1,5 @@
 {
-  "extends": ["@signmax/config/typescript"],
+  "extends": ["@skyltmax/config/typescript"],
   "include": ["src/**/*.ts", "src/**/*.json"],
   "exclude": ["node_modules", "dist"],
   "compilerOptions": {

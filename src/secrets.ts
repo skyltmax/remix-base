@@ -15,7 +15,7 @@ export interface Secrets {
  *
  * @example
  * ```typescript
- * import { loadSecrets, type Secrets } from "@signmax/remix-base/secrets"
+ * import { loadSecrets, type Secrets } from "@skyltmax/remix-base/secrets"
  *
  * interface MySecrets extends Secrets {
  *   apiKey: string

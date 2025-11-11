@@ -1,5 +1,5 @@
 {
-  "name": "@signmax/remix-base",
+  "name": "@skyltmax/remix-base",
   "publishConfig": {
     "access": "public"
   },
@@ -90,10 +90,10 @@
     "dist",
     "src"
   ],
-  "prettier": "@signmax/config/prettier",
+  "prettier": "@skyltmax/config/prettier",
   "devDependencies": {
     "@eslint/js": "9.39.1",
-    "@signmax/config": "^0.0.11",
+    "@skyltmax/config": "^0.0.12",
     "@total-typescript/ts-reset": "0.6.1",
     "@types/compression": "^1.8.1",
     "@types/cookie-parser": "^1.4.10",

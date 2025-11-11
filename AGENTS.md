@@ -1,6 +1,6 @@
-# AI Agent Guide for @signmax/remix-base
+# AI Agent Guide for @skyltmax/remix-base
 
-This document provides comprehensive guidance for AI coding agents working with the `@signmax/remix-base` package.
+This document provides comprehensive guidance for AI coding agents working with the `@skyltmax/remix-base` package.
 
 ## Table of Contents
 
@@ -64,7 +64,7 @@ Breaking change: Default middleware is now optional
 This is a **standalone npm package** providing server utilities for React Router 7 applications:
 
 ```
-@signmax/remix-base/
+@skyltmax/remix-base/
 ├── src/
 │   ├── index.ts                    # Package exports
 │   ├── server.ts                   # Main serveApp function
@@ -130,13 +130,13 @@ This is a **standalone npm package** providing server utilities for React Router
 ### Installation
 
 ```bash
-npm install @signmax/remix-base
+npm install @skyltmax/remix-base
 ```
 
 ### Basic Usage
 
 ```typescript
-import { serveApp } from "@signmax/remix-base/server"
+import { serveApp } from "@skyltmax/remix-base/server"
 import type { ServerBuild } from "react-router"
 
 const build = () => import("./build/server/index.js") as Promise<ServerBuild>
@@ -190,7 +190,7 @@ pnpm format
 
 **Code Style:**
 
-- Follow ESLint configuration from `@signmax/config`
+- Follow ESLint configuration from `@skyltmax/config`
 - Use Prettier for formatting
 - Prefer `const` over `let`, avoid `var`
 - Use explicit return types for public APIs
@@ -216,7 +216,7 @@ The main `serveApp` function sets up an Express server with:
 **Usage:**
 
 ```typescript
-import { serveApp } from "@signmax/remix-base/server"
+import { serveApp } from "@skyltmax/remix-base/server"
 
 await serveApp({
   build,
@@ -240,7 +240,7 @@ Factory for creating React Router load context:
 **Usage:**
 
 ```typescript
-import { getLoadContext } from "@signmax/remix-base/load_context"
+import { getLoadContext } from "@skyltmax/remix-base/load_context"
 
 const context = getLoadContext(req, res, {
   growthbook: gbInstance,
@@ -334,7 +334,7 @@ const defaultMiddleware = requestMiddleware()
 Sentry initialization with configurable options:
 
 ```typescript
-import { init, type SentryConfig } from "@signmax/remix-base/instrumentation"
+import { init, type SentryConfig } from "@skyltmax/remix-base/instrumentation"
 
 init({
   dsn: process.env.SENTRY_DSN!,
@@ -351,7 +351,7 @@ init({
 Prometheus metrics server:
 
 ```typescript
-import { startMetrics } from "@signmax/remix-base/metrics"
+import { startMetrics } from "@skyltmax/remix-base/metrics"
 
 await startMetrics(9394) // port
 ```
@@ -369,7 +369,7 @@ AWS Secrets Manager utility - optional for users:
 **Usage:**
 
 ```typescript
-import { loadSecrets } from "@signmax/remix-base/secrets"
+import { loadSecrets } from "@skyltmax/remix-base/secrets"
 
 const secrets = await loadSecrets<{ apiKey: string }>("my-app/secrets", {
   region: "us-east-1",
@@ -381,7 +381,7 @@ const secrets = await loadSecrets<{ apiKey: string }>("my-app/secrets", {
 **Optional dependency** - feature flag support:
 
 ```typescript
-import { createGrowthBook, type GrowthBookConfig } from "@signmax/remix-base/growthbook"
+import { createGrowthBook, type GrowthBookConfig } from "@skyltmax/remix-base/growthbook"
 
 const gb = await createGrowthBook({
   apiHost: "https://cdn.growthbook.io",
@@ -473,7 +473,7 @@ afterAll(() => server.close())
 **MSW Test Utilities** (`src/test/helpers.ts`):
 
 ```typescript
-import { gqlOpHandler } from "@signmax/remix-base/test/helpers"
+import { gqlOpHandler } from "@skyltmax/remix-base/test/helpers"
 
 const handler = gqlOpHandler("MyOperation", HttpResponse.json({ data: { myField: "value" } }), {
   endpoint: "http://localhost:3000/graphql",

@@ -1,18 +1,18 @@
-# @signmax/remix-base
+# @skyltmax/remix-base
 
 **Production-ready server and shared utilities for React Router 7 apps.**
 
-`@signmax/remix-base` bundles an opinionated Express 5 setup, middleware suite, instrumentation, and utilities so you
+`@skyltmax/remix-base` bundles an opinionated Express 5 setup, middleware suite, instrumentation, and utilities so you
 can ship React Router (Remix) projects without re-writing the same server glue.
 
 ## Quick Start
 
 ```bash
-npm install @signmax/remix-base
+npm install @skyltmax/remix-base
 ```
 
 ```typescript
-import { serveApp } from "@signmax/remix-base/server"
+import { serveApp } from "@skyltmax/remix-base/server"
 import type { ServerBuild } from "react-router"
 
 const build = () => import("./build/server/index.js") as Promise<ServerBuild>
@@ -34,9 +34,9 @@ await serveApp(build, {})
 Switch to the options object when you need control over middleware, dev servers, or context creation:
 
 ```typescript
-import { serveApp, type ServeAppOptions } from "@signmax/remix-base/server"
-import { getLoadContext } from "@signmax/remix-base/load_context"
-import { deviceKeyMiddleware, requestMiddleware } from "@signmax/remix-base/middleware"
+import { serveApp, type ServeAppOptions } from "@skyltmax/remix-base/server"
+import { getLoadContext } from "@skyltmax/remix-base/load_context"
+import { deviceKeyMiddleware, requestMiddleware } from "@skyltmax/remix-base/middleware"
 
 const build = async () => import("../build/server/index.js")
 
@@ -63,7 +63,7 @@ import {
   noIndexMiddleware,
   requestMiddleware,
   sentryIPMiddleware,
-} from "@signmax/remix-base/middleware"
+} from "@skyltmax/remix-base/middleware"
 
 import {
   BrowserDetection,
@@ -72,7 +72,7 @@ import {
   makeTimings,
   time,
   getRevision,
-} from "@signmax/remix-base/util"
+} from "@skyltmax/remix-base/util"
 ```
 
 - CSP middleware ships with nonce support; call `createCspMiddleware` for custom policies.
@@ -80,7 +80,7 @@ import {
   request helper to `req.request`:
 
   ```typescript
-  import { requestMiddleware } from "@signmax/remix-base/middleware"
+  import { requestMiddleware } from "@skyltmax/remix-base/middleware"
 
   const customRequestMiddleware = requestMiddleware({
     endpoint: "https://api.example.com/graphql",
@@ -99,8 +99,8 @@ import {
 ## Logging & Metrics
 
 ```typescript
-import logger from "@signmax/remix-base/logger"
-import { startMetrics } from "@signmax/remix-base/metrics"
+import logger from "@skyltmax/remix-base/logger"
+import { startMetrics } from "@skyltmax/remix-base/metrics"
 
 logger.info("Application started")
 
@@ -113,7 +113,7 @@ during shutdown.
 ## GraphQL Client
 
 ```typescript
-import { createClient, createRequest, createResponseMiddleware } from "@signmax/remix-base/client"
+import { createClient, createRequest, createResponseMiddleware } from "@skyltmax/remix-base/client"
 
 const gqlClient = createClient({
   endpoint: "https://api.example.com/graphql",
@@ -130,7 +130,7 @@ Set `includeDefaultPassthroughHeaders` to `false` when you want complete control
 ## AWS Secrets Manager
 
 ```typescript
-import { loadSecrets } from "@signmax/remix-base/secrets"
+import { loadSecrets } from "@skyltmax/remix-base/secrets"
 
 const secrets = await loadSecrets<{ apiKey: string }>("my-app/production", {
   region: "us-east-1",
@@ -144,7 +144,7 @@ The region falls back to `AWS_REGION` or `eu-central-1`.
 - **Sentry** – call `init` when `SENTRY_DSN` is set.
 
   ```typescript
-  import { init } from "@signmax/remix-base/instrumentation"
+  import { init } from "@skyltmax/remix-base/instrumentation"
 
   if (process.env.SENTRY_DSN) {
     init({
@@ -162,8 +162,8 @@ The region falls back to `AWS_REGION` or `eu-central-1`.
 - **GrowthBook** – install `@growthbook/growthbook` + `eventsource` and pass the instance via `getLoadContext`.
 
   ```typescript
-  import { createGrowthBook } from "@signmax/remix-base/growthbook"
-  import { getLoadContext } from "@signmax/remix-base/load_context"
+  import { createGrowthBook } from "@skyltmax/remix-base/growthbook"
+  import { getLoadContext } from "@skyltmax/remix-base/load_context"
 
   const growthbook = await createGrowthBook({ apiHost: "https://cdn.growthbook.io", clientKey: "key" })
 
@@ -183,7 +183,7 @@ The region falls back to `AWS_REGION` or `eu-central-1`.
 ## Testing Helpers
 
 ```typescript
-import { gqlOpHandler } from "@signmax/remix-base/test/helpers"
+import { gqlOpHandler } from "@skyltmax/remix-base/test/helpers"
 ```
 
 MSW helpers simplify GraphQL mocking and reuse the package defaults.

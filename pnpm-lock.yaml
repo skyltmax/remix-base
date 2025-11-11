@@ -75,9 +75,9 @@ importers:
       '@eslint/js':
         specifier: 9.39.1
         version: 9.39.1
-      '@signmax/config':
-        specifier: ^0.0.11
-        version: 0.0.11(ef40358714c5cb7524a0a07b4433e02d)
+      '@skyltmax/config':
+        specifier: ^0.0.12
+        version: 0.0.12(ef40358714c5cb7524a0a07b4433e02d)
       '@total-typescript/ts-reset':
         specifier: 0.6.1
         version: 0.6.1
@@ -1085,8 +1085,8 @@ packages:
     engines: {node: '>=18'}
     hasBin: true
 
-  '@signmax/config@0.0.11':
-    resolution: {integrity: sha512-Fi+0UWeS/HvL9tB/mP+Evt8XQQ95UKwZkVeDkNdRndzDS4QG8luwYADC+VE2ZTbICpHi4FNDgvtMXFv0cS8NeA==}
+  '@skyltmax/config@0.0.12':
+    resolution: {integrity: sha512-ivGoWroufYOEhh3HQ4UvcYV69G3FXxHuOJFs364eemW0BFJxfWm+BLbrFhC/+71c1segSVtRNVKX0U9oEiQu7A==, tarball: https://npm.pkg.github.com/download/@skyltmax/config/0.0.12/c5f0e173b490d7d800318f32fb510f17abfd2a26}
     engines: {node: '>=20.0.0'}
     hasBin: true
     peerDependencies:
@@ -4809,7 +4809,7 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@signmax/config@0.0.11(ef40358714c5cb7524a0a07b4433e02d)':
+  '@skyltmax/config@0.0.12(ef40358714c5cb7524a0a07b4433e02d)':
     dependencies:
       '@eslint/js': 9.39.1
       '@total-typescript/ts-reset': 0.6.1

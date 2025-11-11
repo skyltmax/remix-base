@@ -3,3 +3,4 @@ node_modules
 .devcontainer/.bootdone
 /coverage
 dist
+.npmrc

@@ -9,6 +9,7 @@ on:
 
 permissions:
   contents: read
+  packages: write
   id-token: write # required for trusted publishing
 
 concurrency:
@@ -46,7 +47,7 @@ jobs:
           fi
 
   publish_npm:
-    name: Publish to npm
+    name: Publish npm package to GitHub Packages
     needs: verify
     if: github.event_name == 'release'
     runs-on: ubuntu-latest
@@ -59,14 +60,28 @@ jobs:
           node-version: "22"
           registry-url: "https://registry.npmjs.org"
 
-      - name: Ensure modern npm for OIDC trusted publishing
-        run: npm install -g npm@latest
+      - name: Configure npm registry auth
+        run: |
+          npm config set //npm.pkg.github.com/:_authToken "${NODE_AUTH_TOKEN}"
+          npm config set @skyltmax:registry https://npm.pkg.github.com
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Publish to npm
-        run: npm publish --access public
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10
 
-  publish_canary:
-    name: Publish canary to npm
+      - name: Install dependencies
+        run: pnpm install
+
+      - name: Publish package
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: npm publish --registry https://npm.pkg.github.com
+
+  publish_npm_canary:
+    name: Publish npm canary to GitHub Packages
     runs-on: ubuntu-latest
     if: github.event_name == 'push'
     steps:
@@ -80,6 +95,13 @@ jobs:
           node-version: "22"
           registry-url: "https://registry.npmjs.org"
 
+      - name: Configure npm registry auth
+        run: |
+          npm config set //npm.pkg.github.com/:_authToken "${NODE_AUTH_TOKEN}"
+          npm config set @skyltmax:registry https://npm.pkg.github.com
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Install pnpm
         uses: pnpm/action-setup@v4
         with:
@@ -90,9 +112,6 @@ jobs:
 
       - name: Run tests
         run: pnpm test
-
-      - name: Ensure modern npm for OIDC trusted publishing
-        run: npm install -g npm@latest
 
       - name: Create canary version
         run: |
@@ -108,5 +127,7 @@ jobs:
           echo "Creating canary version: $CANARY_VERSION"
           npm version "$CANARY_VERSION" --no-git-tag-version
 
-      - name: Publish canary to npm
-        run: npm publish --access public --tag canary
+      - name: Publish canary to GitHub Packages
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: npm publish --registry https://npm.pkg.github.com --tag canary

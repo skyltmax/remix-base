@@ -1,4 +1,4 @@
-import { config as defaultConfig } from "@signmax/config/eslint"
+import { config as defaultConfig } from "@skyltmax/config/eslint"
 
 /** @type {import("eslint").Linter.Config[]} */
 export default [
