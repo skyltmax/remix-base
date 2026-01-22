@@ -83,11 +83,7 @@ export async function serveApp(
 
   app.disable("x-powered-by")
   app.use(expressLogger)
-  app.use(cookieParser())
   app.use(compression())
-
-  const middlewareStack = middleware ?? createDefaultMiddleware()
-  middlewareStack.forEach(m => app.use(m))
 
   if (devServer) {
     app.use(devServer)
@@ -106,6 +102,11 @@ export async function serveApp(
   app.get("/livez", (req, res) => {
     res.status(200).send("HI")
   })
+
+  app.use(cookieParser())
+
+  const middlewareStack = middleware ?? createDefaultMiddleware()
+  middlewareStack.forEach(m => app.use(m))
 
   app.all(
     "*splat",
