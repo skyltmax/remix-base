@@ -18,19 +18,7 @@ const loggerOpts: LoggerOptions = {
   },
 }
 
-export const logger = pino(
-  process.env.NODE_ENV !== "production"
-    ? {
-        ...loggerOpts,
-        transport: {
-          target: "pino-pretty",
-          options: {
-            colorize: true,
-          },
-        },
-      }
-    : loggerOpts
-)
+export const logger = pino(loggerOpts)
 
 const expressLoggerOpts: HttpLoggerOpts = {
   logger,
@@ -76,24 +64,6 @@ const expressLoggerOpts: HttpLoggerOpts = {
   },
 }
 
-export const expressLogger = pinoHttp(
-  process.env.NODE_ENV !== "production"
-    ? {
-        ...expressLoggerOpts,
-
-        quietReqLogger: true,
-        quietResLogger: true,
-
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        customReceivedMessage: (req: any) => `Started ${req.method} "${req.url}" for ${req.socket.remoteAddress}`,
-
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        customSuccessMessage: (_req: any, res: any) => `Completed ${res.statusCode}`,
-
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        customErrorMessage: (_req: any, res: any) => `Failed ${res.statusCode}`,
-      }
-    : expressLoggerOpts
-)
+export const expressLogger = pinoHttp(expressLoggerOpts)
 
 export default logger

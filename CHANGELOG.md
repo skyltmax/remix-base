@@ -3,6 +3,7 @@
 ### Unreleased
 
 - build: Switch to official package registry.
+- feat: Disable pino pretty logging in non-production.
 
 ### [0.0.2] - 2026-01-27
 
