@@ -133,7 +133,7 @@ describe("GraphQL client", () => {
 
       const middleware = createResponseMiddleware(req, res)
       await middleware(
-        { ...gqlResponse, headers: gqlHeaders, data: {}, status: 200 },
+        { ...gqlResponse, headers: gqlHeaders, data: {}, status: 200, body: "" },
         { ...req, headers: new Headers() }
       )
 
@@ -168,7 +168,7 @@ describe("GraphQL client", () => {
 
       const middleware = createResponseMiddleware(req, res)
       await middleware(
-        { ...gqlResponse, headers: gqlHeaders, data: {}, status: 200 },
+        { ...gqlResponse, headers: gqlHeaders, data: {}, status: 200, body: "" },
         { ...req, headers: new Headers() }
       )
 
@@ -203,7 +203,7 @@ describe("GraphQL client", () => {
 
       const middleware = createResponseMiddleware(req, res)
       await middleware(
-        { ...gqlResponse, headers: gqlHeaders, data: {}, status: 200 },
+        { ...gqlResponse, headers: gqlHeaders, data: {}, status: 200, body: "" },
         { ...req, headers: new Headers() }
       )
 
@@ -225,7 +225,7 @@ describe("GraphQL client", () => {
 
       const middleware = createResponseMiddleware(req, res, true)
       await middleware(
-        { ...gqlResponse, headers: gqlHeaders, data: {}, status: 200 },
+        { ...gqlResponse, headers: gqlHeaders, data: {}, status: 200, body: "" },
         { ...req, headers: new Headers() }
       )
 
@@ -311,7 +311,7 @@ describe("GraphQL client", () => {
 
       const middleware = createResponseMiddleware(req, res)
       await middleware(
-        { ...gqlResponse, headers: gqlHeaders, data: {}, status: 200 },
+        { ...gqlResponse, headers: gqlHeaders, data: {}, status: 200, body: "" },
         { ...req, headers: new Headers() }
       )
 

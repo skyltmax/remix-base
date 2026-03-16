@@ -1,2 +1,6 @@
 onlyBuiltDependencies:
-  - '@skyltmax/config'
+  - '@sentry-internal/node-cpu-profiler'
+  - '@signmax/config'
+  - esbuild
+  - msw
+  - unrs-resolver
