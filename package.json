@@ -1,5 +1,5 @@
 {
-  "name": "@skyltmax/remix-base",
+  "name": "@signmax/remix-base",
   "publishConfig": {
     "access": "public"
   },
