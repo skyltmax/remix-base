@@ -2,6 +2,8 @@
 
 ### Unreleased
 
+- build: Switch to official package registry.
+
 ### [0.0.2] - 2026-01-27
 
 - fix: Move custom middlewares after asset handlers.
