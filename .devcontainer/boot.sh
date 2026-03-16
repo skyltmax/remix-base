@@ -40,18 +40,26 @@ if [ -f "${MARKER_FILE}" ]; then
   source "${MARKER_FILE}"
 fi
 
-if [ "${CHANGELOG_DISPLAYED_6}" != "true" ]; then
+if [ "${PNPM_ALREADY_INSTALLED_1}" != "true" ]; then
+  rm -rf $DEVC_WORKSPACE/node_modules
+  bootcmd "Installing NPM packages for workspace" "pnpm install"
+
+  PNPM_ALREADY_INSTALLED_1="true"
+fi
+
+if [ "${CHANGELOG_DISPLAYED_20}" != "true" ]; then
   if [ -f "/var/lib/smdevc/changelog" ]; then
     printf "\n"
     toilet -f term -t -F border:metal "Latest Changes"
     cat /var/lib/smdevc/changelog
   fi
 
-  CHANGELOG_DISPLAYED_6="true"
+  CHANGELOG_DISPLAYED_20="true"
 fi
 
 echo -e "\
-  CHANGELOG_DISPLAYED_6=${CHANGELOG_DISPLAYED_6}" > "${MARKER_FILE}"
+  PNPM_ALREADY_INSTALLED_5=${PNPM_ALREADY_INSTALLED_1}\n\
+  CHANGELOG_DISPLAYED_20=${CHANGELOG_DISPLAYED_20}" > "${MARKER_FILE}"
 
 printf "\n\n\e[38;2;252;163;17m"
 toilet -f standard "Remix Base"
