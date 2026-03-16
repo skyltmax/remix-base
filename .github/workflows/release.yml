@@ -86,6 +86,12 @@ jobs:
           registry-url: "https://registry.npmjs.org"
       - name: Ensure modern npm for OIDC trusted publishing
         run: npm install -g npm@latest
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10
+      - name: Install dependencies
+        run: pnpm install
       - name: Publish package
         run: npm publish --access public
   publish_npm_canary:
@@ -102,6 +108,12 @@ jobs:
           registry-url: "https://registry.npmjs.org"
       - name: Ensure modern npm for OIDC trusted publishing
         run: npm install -g npm@latest
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10
+      - name: Install dependencies
+        run: pnpm install
       - name: Set canary version from tag
         run: |
           TAG_VERSION="${GITHUB_REF_NAME#v}"
