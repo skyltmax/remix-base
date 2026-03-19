@@ -14,7 +14,7 @@ const defaultDenyUrls = [
 ]
 
 export function init(config: Parameters<typeof Sentry.init>[0]) {
-  const environment = process.env.NODE_ENV || "development"
+  const environment = config.environment ?? (process.env.NODE_ENV || "development")
   const tracesSampleRate = config?.tracesSampleRate ?? 1
 
   Sentry.init({
