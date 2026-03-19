@@ -2,6 +2,9 @@
 
 ### Unreleased
 
+- feat: New Sentry React Router framework mode integration.
+- feat: Sentry scope meta middleware.
+
 ### [0.0.3] - 2026-03-17
 
 - build: Switch to official package registry.

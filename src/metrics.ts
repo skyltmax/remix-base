@@ -1,5 +1,5 @@
 import type { Server } from "node:http"
-import * as Sentry from "@sentry/node"
+import * as Sentry from "@sentry/react-router"
 import chalk from "chalk"
 import closeWithGrace from "close-with-grace"
 import express, { type Express } from "express"

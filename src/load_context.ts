@@ -1,5 +1,5 @@
 import type { GrowthBookClient, UserScopedGrowthBook } from "@growthbook/growthbook"
-import * as Sentry from "@sentry/node"
+import * as Sentry from "@sentry/react-router"
 import type * as express from "express"
 import { isbot } from "isbot"
 import { type Logger } from "pino"

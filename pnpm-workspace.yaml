@@ -1,5 +1,6 @@
 onlyBuiltDependencies:
   - '@sentry-internal/node-cpu-profiler'
+  - '@sentry/cli'
   - '@signmax/config'
   - esbuild
   - msw

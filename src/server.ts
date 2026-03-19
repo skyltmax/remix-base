@@ -1,6 +1,6 @@
 import type { Server } from "node:http"
 import { createRequestHandler, type GetLoadContextFunction } from "@react-router/express"
-import * as Sentry from "@sentry/node"
+import * as Sentry from "@sentry/react-router"
 import chalk from "chalk"
 import closeWithGrace from "close-with-grace"
 import compression from "compression"
@@ -14,7 +14,7 @@ import { cspMiddleware } from "./middleware/csp.js"
 import { endingSlashMiddleware } from "./middleware/ending_slash.js"
 import { helmetMiddleware } from "./middleware/helmet.js"
 import { noIndexMiddleware } from "./middleware/noindex.js"
-import { sentryIPMiddleware } from "./middleware/sentry_ip.js"
+import { sentryScopeMiddleware } from "./middleware/sentry_scope.js"
 
 export interface ServeAppOptions {
   devServer?: RequestHandler
@@ -34,7 +34,6 @@ export interface ServeAppHandle {
 }
 
 export const createDefaultMiddleware = (): RequestHandler[] => [
-  sentryIPMiddleware,
   endingSlashMiddleware,
   helmetMiddleware,
   noIndexMiddleware,
@@ -85,6 +84,12 @@ export async function serveApp(
   app.use(expressLogger)
   app.use(compression())
 
+  app.get("/livez", (req, res) => {
+    res.status(200).send("HI")
+  })
+
+  app.use(sentryScopeMiddleware)
+
   if (devServer) {
     app.use(devServer)
   } else {
@@ -98,10 +103,6 @@ export async function serveApp(
     // more aggressive with this caching.
     app.use(express.static(buildDirPath, { maxAge: "1h" }))
   }
-
-  app.get("/livez", (req, res) => {
-    res.status(200).send("HI")
-  })
 
   app.use(cookieParser())
 
