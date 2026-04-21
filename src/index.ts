@@ -1,5 +1,5 @@
 export { init } from "./instrumentation.js"
-export { getLoadContext, type GetLoadContextOptions } from "./load_context.js"
+export { serverContext, getServerContext } from "./router_context.js"
 export { default as logger } from "./logger.js"
 export { startMetrics } from "./metrics.js"
 export { loadSecrets, type LoadSecretsOptions } from "./secrets.js"

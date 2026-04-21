@@ -3,7 +3,7 @@
   "publishConfig": {
     "access": "public"
   },
-  "version": "0.0.4",
+  "version": "0.0.5",
   "description": "Server and shared utils for React Router 7 projects",
   "license": "MIT",
   "author": "Signmax AB <team@signomatic.ee> (https://skyltmax.se/)",
@@ -38,9 +38,9 @@
       "import": "./dist/instrumentation.js",
       "types": "./dist/instrumentation.d.ts"
     },
-    "./load_context": {
-      "import": "./dist/load_context.js",
-      "types": "./dist/load_context.d.ts"
+    "./router_context": {
+      "import": "./dist/router_context.js",
+      "types": "./dist/router_context.d.ts"
     },
     "./logger": {
       "import": "./dist/logger.js",

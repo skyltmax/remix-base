@@ -13,7 +13,6 @@ import logger, { expressLogger } from "./logger.js"
 import { cspMiddleware } from "./middleware/csp.js"
 import { endingSlashMiddleware } from "./middleware/ending_slash.js"
 import { helmetMiddleware } from "./middleware/helmet.js"
-import { noIndexMiddleware } from "./middleware/noindex.js"
 import { sentryScopeMiddleware } from "./middleware/sentry_scope.js"
 
 export interface ServeAppOptions {
@@ -33,12 +32,7 @@ export interface ServeAppHandle {
   close: () => Promise<void>
 }
 
-export const createDefaultMiddleware = (): RequestHandler[] => [
-  endingSlashMiddleware,
-  helmetMiddleware,
-  noIndexMiddleware,
-  cspMiddleware,
-]
+export const createDefaultMiddleware = (): RequestHandler[] => [endingSlashMiddleware, helmetMiddleware, cspMiddleware]
 
 export async function serveApp(
   build: ServerBuild | (() => Promise<ServerBuild>),

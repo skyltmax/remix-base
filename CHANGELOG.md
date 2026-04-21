@@ -2,6 +2,8 @@
 
 ### Unreleased
 
+- feat: React Router middleware mode contexts.
+
 ### [0.0.4] - 2026-03-19
 
 - feat: New Sentry React Router framework mode integration.
