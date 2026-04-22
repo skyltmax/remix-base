@@ -164,10 +164,9 @@ The region falls back to `AWS_REGION` or `eu-central-1`.
 
 ## Optional Integrations
 
-- **Sentry** – peer dependencies `@sentry/react-router` and `@sentry/profiling-node` must be installed. Call `init`
-  from your instrumentation entry (`--import ./instrument.mjs`) when `SENTRY_DSN` is set. The helper enables Sentry
-  only in `production`/`staging` environments, wires Pino + HTTP + profiling integrations, and filters health-check
-  traffic.
+- **Sentry** – peer dependencies `@sentry/react-router` and `@sentry/profiling-node` must be installed. Call `init` from
+  your instrumentation entry (`--import ./instrument.mjs`) when `SENTRY_DSN` is set. The helper enables Sentry only in
+  `production`/`staging` environments, wires Pino + HTTP + profiling integrations, and filters health-check traffic.
 
   ```typescript
   import { init } from "@signmax/remix-base/instrumentation"
@@ -181,18 +180,14 @@ The region falls back to `AWS_REGION` or `eu-central-1`.
   }
   ```
 
-  Every request is automatically enriched with a Sentry isolation scope (method, path, host, IP, referrer,
-  user-agent, filtered query/body params, and response status) via the built-in `sentryScopeMiddleware`.
+  Every request is automatically enriched with a Sentry isolation scope (method, path, host, IP, referrer, user-agent,
+  filtered query/body params, and response status) via the built-in `sentryScopeMiddleware`.
 
 - **GrowthBook** – install `@growthbook/growthbook` + `eventsource` and expose a scoped client through React Router's
   context.
 
   ```typescript
-  import {
-    createGrowthBook,
-    createScopedGrowthBook,
-    growthbookContext,
-  } from "@signmax/remix-base/growthbook"
+  import { createGrowthBook, createScopedGrowthBook, growthbookContext } from "@signmax/remix-base/growthbook"
   import { getServerContext } from "@signmax/remix-base/router_context"
 
   const growthbook = await createGrowthBook({ apiHost: "https://cdn.growthbook.io", clientKey: "key" })
