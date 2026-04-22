@@ -3,7 +3,7 @@
 **Production-ready server and shared utilities for React Router 7 apps.**
 
 `@signmax/remix-base` bundles an opinionated Express 5 setup, middleware suite, instrumentation, and utilities so you
-can ship React Router (Remix) projects without re-writing the same server glue.
+can ship React Router 7 (framework middleware mode) projects without re-writing the same server glue.
 
 ## Quick Start
 
@@ -23,10 +23,12 @@ await serveApp(build, {})
 ## What You Get
 
 - Express 5 server with sensible defaults and CloudFront-aware proxy trust
-- Middleware bundle (Helmet, CSP, no-index, trailing slash guard, Sentry IP) plus optional device-key helper
+- Middleware bundle (Helmet, CSP, no-index, trailing slash guard) plus optional device-key helper
+- Built-in Sentry scope middleware that enriches every request with filtered params, tags, and user IP
 - Structured logging via Pino and Prometheus metrics endpoint
 - GraphQL helpers with cookie pass-through and shared-secret auth
-- Load context utilities, GrowthBook integration, and AWS Secrets Manager helper
+- React Router 7 server context (`serverContext`) and optional GrowthBook context
+- AWS Secrets Manager helper
 - TypeScript-first API with comprehensive tests
 
 ## Server Setup
@@ -34,23 +36,48 @@ await serveApp(build, {})
 Switch to the options object when you need control over middleware, dev servers, or context creation:
 
 ```typescript
-import { serveApp, type ServeAppOptions } from "@signmax/remix-base/server"
-import { getLoadContext } from "@signmax/remix-base/load_context"
+import { serveApp, createDefaultMiddleware, type ServeAppOptions } from "@signmax/remix-base/server"
+import { getServerContext } from "@signmax/remix-base/router_context"
 import { deviceKeyMiddleware, requestMiddleware } from "@signmax/remix-base/middleware"
 
 const build = async () => import("../build/server/index.js")
 
 const options: ServeAppOptions = {
-  middleware: [requestMiddleware(), deviceKeyMiddleware({ cookieName: "device_id" })],
-  getLoadContext: (req, res) => getLoadContext(req, res, { deviceKeyCookieName: "device_id" }),
+  middleware: [...createDefaultMiddleware(), requestMiddleware(), deviceKeyMiddleware({ cookieName: "device_id" })],
+  getLoadContext: (req, res) => getServerContext(req, res),
   trustCloudFrontIPs: true,
 }
 
 await serveApp(build, options)
 ```
 
+Passing `middleware` replaces the defaults entirely, so spread `createDefaultMiddleware()` (trailing slash, Helmet, CSP)
+when you still want them. `serveApp` always wires in the Sentry scope middleware, Pino request logger, compression,
+cookie parser, and a `/livez` health endpoint on top.
+
 In development, pass a Vite dev server (`devServer: viteServer.middlewares`) and call `startMetrics()` when you want a
 Prometheus endpoint.
+
+## Router Context
+
+`@signmax/remix-base/router_context` plugs into React Router 7's middleware mode. `getServerContext` returns a
+`RouterContextProvider` seeded with the per-request `serverContext` value (revision, logger, IP, CSP nonce, and the
+GraphQL request function).
+
+```typescript
+import { serverContext } from "@signmax/remix-base/router_context"
+import type { LoaderFunctionArgs } from "react-router"
+
+export const loader = async ({ context }: LoaderFunctionArgs) => {
+  const { gqlRequest, log, cspNonce } = context.get(serverContext)
+  log.info("loading dashboard")
+  const data = await gqlRequest(/* ... */)
+  return { data, cspNonce }
+}
+```
+
+The `gqlRequest` function is installed on `req.request` by `requestMiddleware` and surfaced through the context as
+`gqlRequest`.
 
 ## Middleware & Utilities
 
@@ -62,7 +89,6 @@ import {
   helmetMiddleware,
   noIndexMiddleware,
   requestMiddleware,
-  sentryIPMiddleware,
 } from "@signmax/remix-base/middleware"
 
 import {
@@ -75,7 +101,7 @@ import {
 } from "@signmax/remix-base/util"
 ```
 
-- CSP middleware ships with nonce support; call `createCspMiddleware` for custom policies.
+- `cspMiddleware` seeds `res.locals.cspNonce` with a fresh nonce on every request.
 - `requestMiddleware` is a factory that accepts GraphQL client options and returns middleware that attaches a GraphQL
   request helper to `req.request`:
 
@@ -115,12 +141,9 @@ during shutdown.
 ```typescript
 import { createClient, createRequest, createResponseMiddleware } from "@signmax/remix-base/client"
 
-const gqlClient = createClient({
+const requestFn = createRequest(req, res, createResponseMiddleware(req, res), {
   endpoint: "https://api.example.com/graphql",
   sharedSecret: process.env.SHARED_SECRET,
-})
-
-const requestFn = createRequest(req, res, createResponseMiddleware(req, res), {
   passthroughHeaders: ["x-tenant-id"],
 })
 ```
@@ -141,7 +164,10 @@ The region falls back to `AWS_REGION` or `eu-central-1`.
 
 ## Optional Integrations
 
-- **Sentry** – call `init` when `SENTRY_DSN` is set.
+- **Sentry** – peer dependencies `@sentry/react-router` and `@sentry/profiling-node` must be installed. Call `init`
+  from your instrumentation entry (`--import ./instrument.mjs`) when `SENTRY_DSN` is set. The helper enables Sentry
+  only in `production`/`staging` environments, wires Pino + HTTP + profiling integrations, and filters health-check
+  traffic.
 
   ```typescript
   import { init } from "@signmax/remix-base/instrumentation"
@@ -149,25 +175,33 @@ The region falls back to `AWS_REGION` or `eu-central-1`.
   if (process.env.SENTRY_DSN) {
     init({
       dsn: process.env.SENTRY_DSN,
-      configuration: {
-        environment: "production",
-        tracesSampleRate: 0.1,
-        profilesSampleRate: 0.05,
-        sendDefaultPii: false,
-      },
+      environment: "production",
+      tracesSampleRate: 0.1,
     })
   }
   ```
 
-- **GrowthBook** – install `@growthbook/growthbook` + `eventsource` and pass the instance via `getLoadContext`.
+  Every request is automatically enriched with a Sentry isolation scope (method, path, host, IP, referrer,
+  user-agent, filtered query/body params, and response status) via the built-in `sentryScopeMiddleware`.
+
+- **GrowthBook** – install `@growthbook/growthbook` + `eventsource` and expose a scoped client through React Router's
+  context.
 
   ```typescript
-  import { createGrowthBook } from "@signmax/remix-base/growthbook"
-  import { getLoadContext } from "@signmax/remix-base/load_context"
+  import {
+    createGrowthBook,
+    createScopedGrowthBook,
+    growthbookContext,
+  } from "@signmax/remix-base/growthbook"
+  import { getServerContext } from "@signmax/remix-base/router_context"
 
   const growthbook = await createGrowthBook({ apiHost: "https://cdn.growthbook.io", clientKey: "key" })
 
-  const getContext = (req, res) => getLoadContext(req, res, { growthbook })
+  const getLoadContext = (req, res) => {
+    const context = getServerContext(req, res)
+    context.set(growthbookContext, createScopedGrowthBook(req, growthbook))
+    return context
+  }
   ```
 
 ## Environment Variables
@@ -178,6 +212,7 @@ The region falls back to `AWS_REGION` or `eu-central-1`.
 - `ASSETS_DIR` – fingerprinted assets directory (defaults to `${BUILD_DIR}/assets`)
 - `PROMETHEUS_EXPORTER_PORT` – metrics server port (`9394` by default)
 - `AWS_REGION` – Secrets Manager region (`eu-central-1` by default)
+- `SENTRY_DSN` – enables Sentry when set alongside a `production`/`staging` environment
 - `GIT_REV` – optional release/commit override for logging and Sentry
 
 ## Testing Helpers
