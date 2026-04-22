@@ -34,8 +34,8 @@ export const createGrowthBook = async (config: GrowthBookConfig) => {
 
 export interface ScopedGrowthbookOptions {
   attributes?: Attributes
-  forcedFeatures?: Map<string, unknown>
-  deviceId?: string
+  forcedFeatures?: Map<string, unknown> | null
+  deviceId?: string | null
 }
 
 export const createScopedGrowthBook = (

@@ -3,6 +3,7 @@
 ### Unreleased
 
 - feat: React Router middleware mode contexts.
+- ref: Rename graphql request function in server context.
 
 ### [0.0.4] - 2026-03-19
 

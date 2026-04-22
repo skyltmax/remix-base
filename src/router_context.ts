@@ -7,7 +7,7 @@ import { getRevision } from "./util/revision.js"
 
 export interface ServerContext {
   revision?: string
-  request: RequestFunc
+  gqlRequest: RequestFunc
   log: Logger
   ip?: string
   cspNonce: string
@@ -30,7 +30,7 @@ export const getServerContext = (request: express.Request, response: express.Res
 
   context.set(serverContext, {
     revision: REVISION,
-    request: request.request,
+    gqlRequest: request.request,
     log: request.log,
     ip: request.ip,
     cspNonce: response.locals.cspNonce,
