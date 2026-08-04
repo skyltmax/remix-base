@@ -89,7 +89,7 @@ jobs:
       - name: Install pnpm
         uses: pnpm/action-setup@v4
         with:
-          version: 10
+          version: 11
       - name: Install dependencies
         run: pnpm install
       - name: Publish package
@@ -111,7 +111,7 @@ jobs:
       - name: Install pnpm
         uses: pnpm/action-setup@v4
         with:
-          version: 10
+          version: 11
       - name: Install dependencies
         run: pnpm install
       - name: Set canary version from tag
