@@ -1,0 +1,107 @@
+{
+  $schema: "https://docs.renovatebot.com/renovate-schema.json",
+
+  // Layer 1 (mechanical) config. The research/orchestration layer lives in docs/upgrades/.
+  // Same two-layer model as skyltmax/skyltmax and skyltmax/infra: Renovate detects pins and opens
+  // bump PRs, the impact-brief workflow (.claude/workflows/upgrade-research.js) decides what merges.
+  extends: ["config:recommended", ":dependencyDashboard", ":semanticCommits"],
+
+  timezone: "Europe/Tallinn",
+  // Weekly batch — Mondays. Brief the batch before merging (docs/upgrades/RUNBOOK.md).
+  schedule: ["* * * * 1"],
+  // Refreshes in-range deps in pnpm-lock.yaml weekly. Like every other PR it is briefed and merged
+  // by a human — there is NO automerge anywhere in this repo.
+  lockFileMaintenance: { enabled: true, schedule: ["* * * * 1"] },
+
+  // Keep noise bounded; majors are gated on the dashboard (see packageRules) so they queue, not flood.
+  prConcurrentLimit: 8,
+  prHourlyLimit: 4,
+  separateMajorMinor: true,
+  separateMultipleMajor: true,
+
+  // This repo's commit convention uses `build:` for dependency/tooling changes.
+  semanticCommitType: "build",
+
+  // Every Renovate PR carries this label; packageRules add more specific ones on top.
+  labels: ["dependencies"],
+
+  // Supply-chain guard: let third-party releases settle before we pull them. First-party packages
+  // and our own harbor images are exempted below.
+  minimumReleaseAge: "3 days",
+  // The dedicated GitHub App has no security-events permission, so source vulnerability data from OSV.
+  osvVulnerabilityAlerts: true,
+
+  // npm covers package.json (deps, devDeps, peerDeps, optionalDeps) + pnpm-lock.yaml; github-actions
+  // covers .github/workflows; docker-compose covers the harbor devcontainer image pin in
+  // .devcontainer/docker-compose.yml.
+  enabledManagers: ["npm", "github-actions", "docker-compose"],
+
+  packageRules: [
+    // --- Majors: never auto, always queue on the dashboard for a human + an impact brief ---
+    {
+      matchUpdateTypes: ["major"],
+      dependencyDashboardApproval: true,
+      addLabels: ["upgrade/major"],
+    },
+
+    // --- Group minor+patch per ecosystem into one PR each ---
+    // NOTE: grouping asserts nothing about safety — it bounds PR volume and CI runs. The per-PR
+    // impact brief (docs/upgrades/RUNBOOK.md → research gate) is the actual gate.
+    {
+      matchManagers: ["npm"],
+      matchUpdateTypes: ["minor", "patch"],
+      groupName: "js dependencies (minor+patch)",
+    },
+    {
+      matchManagers: ["github-actions"],
+      matchUpdateTypes: ["minor", "patch"],
+      groupName: "github actions (minor+patch)",
+    },
+
+    // --- Lockstep / high-importance sets: own PR, never buried in the weekly ecosystem group ---
+    // react-router + @react-router/express are peerDependencies on the same release train, and RR7
+    // middleware mode is this package's whole surface. Group every update type so a major can't
+    // land half. Peer ranges widen rather than bump (Renovate default for peerDeps), so in practice
+    // these PRs appear on majors; in-range minors flow via lockFileMaintenance.
+    {
+      matchPackageNames: ["react-router", "@react-router/**"],
+      groupName: "react-router (lockstep)",
+    },
+    // Sentry moves as one set; the monorepo tracks the same `sentry` catalog set on its side.
+    {
+      matchPackageNames: ["@sentry/**"],
+      groupName: "sentry",
+    },
+    // GrowthBook: optionalDependency + its eventsource polyfill. src/growthbook.ts relies on
+    // per-version-verified SDK internals (docs/upgrades/INTERACTIONS.md §3) — own PR.
+    {
+      matchPackageNames: ["@growthbook/growthbook", "eventsource"],
+      groupName: "growthbook",
+    },
+
+    // --- First-party packages: releases from sibling repos — no settle time, own PR ---
+    {
+      matchPackageNames: ["@signmax/**", "@skyltmax/**"],
+      minimumReleaseAge: "0 days",
+      groupName: "first-party packages",
+      addLabels: ["first-party"],
+    },
+
+    // --- Harbor images: built in skyltmax/infra, tracked here ---
+    // The CHANGELOG_DISPLAYED_<N> marker in .devcontainer/boot.sh still needs a manual commit on
+    // the PR (INTERACTIONS §1). Tags carry <upstream>-<N> rebuild suffixes, which docker versioning
+    // would misread as a compatibility suffix — regex versioning treats <N> as a build counter.
+    {
+      matchPackageNames: ["harbor.signmax.cloud/**"],
+      groupName: "harbor images",
+      addLabels: ["cross-repo/infra"],
+      minimumReleaseAge: "0 days",
+      versioning: "regex:^(?<major>\\d+)\\.(?<minor>\\d+)\\.(?<patch>\\d+)-(?<build>\\d+)$",
+    },
+    // The devcontainer image prefixes its tags with the stack name (devcontainer:rails-4.0.6-25).
+    {
+      matchPackageNames: ["harbor.signmax.cloud/public/devcontainer"],
+      versioning: "regex:^rails-(?<major>\\d+)\\.(?<minor>\\d+)\\.(?<patch>\\d+)-(?<build>\\d+)$",
+    },
+  ],
+}
