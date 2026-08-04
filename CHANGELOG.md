@@ -2,6 +2,10 @@
 
 ### Unreleased
 
+- feat: GrowthBook sticky bucketing support (`stickyBucketService` option and `refreshStickyBuckets`). Breaking:
+  `createScopedGrowthBook` is now async.
+- build: Bump `@growthbook/growthbook` to `^1.6.5`.
+- build: Renovate config and upgrade runbook (`renovate.json5`, `docs/upgrades/`).
 - feat: React Router middleware mode contexts.
 - ref: Rename graphql request function in server context.
 

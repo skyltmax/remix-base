@@ -192,12 +192,18 @@ The region falls back to `AWS_REGION` or `eu-central-1`.
 
   const growthbook = await createGrowthBook({ apiHost: "https://cdn.growthbook.io", clientKey: "key" })
 
-  const getLoadContext = (req, res) => {
+  const getLoadContext = async (req, res) => {
     const context = getServerContext(req, res)
-    context.set(growthbookContext, createScopedGrowthBook(req, growthbook))
+    context.set(growthbookContext, await createScopedGrowthBook(req, growthbook))
     return context
   }
   ```
+
+  Pass a `stickyBucketService` (an implementation of the SDK's `StickyBucketService`) to persist experiment assignments
+  across sessions. Bot requests skip the service entirely, and store failures fail open to hash-based assignment. If
+  identity attributes only become known mid-request (e.g. after auth middleware), call
+  `refreshStickyBuckets(gbInstance, growthbook, stickyBucketService)` after `updateAttributes` to load the assignments
+  keyed on the new attributes.
 
 ## Environment Variables
 
