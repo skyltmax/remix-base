@@ -27,19 +27,19 @@ if [ "${PNPM_ALREADY_INSTALLED_1}" != "true" ]; then
   PNPM_ALREADY_INSTALLED_1="true"
 fi
 
-if [ "${CHANGELOG_DISPLAYED_20}" != "true" ]; then
+if [ "${CHANGELOG_DISPLAYED_25}" != "true" ]; then
   if [ -f "/var/lib/smdevc/changelog" ]; then
     printf "\n"
     toilet -f term -t -F border:metal "Latest Changes"
     cat /var/lib/smdevc/changelog
   fi
 
-  CHANGELOG_DISPLAYED_20="true"
+  CHANGELOG_DISPLAYED_25="true"
 fi
 
 echo -e "\
   PNPM_ALREADY_INSTALLED_5=${PNPM_ALREADY_INSTALLED_1}\n\
-  CHANGELOG_DISPLAYED_20=${CHANGELOG_DISPLAYED_20}" > "${MARKER_FILE}"
+  CHANGELOG_DISPLAYED_25=${CHANGELOG_DISPLAYED_25}" > "${MARKER_FILE}"
 
 printf "\n\n\e[38;2;252;163;17m"
 toilet -f standard "Remix Base"
