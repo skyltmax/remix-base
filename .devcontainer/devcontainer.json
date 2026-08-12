@@ -5,7 +5,13 @@
   "workspaceFolder": "/workspaces/remixbase",
   "containerEnv": {
     "NODE_ENV": "development",
-    "DEVC_WORKSPACE": "${containerWorkspaceFolder}"
+    "DEVC_WORKSPACE": "${containerWorkspaceFolder}",
+    "PNPM_CONFIG_VERIFY_DEPS_BEFORE_RUN": "false"
+  },
+  "customizations": {
+    "coder": {
+      "autoStart": true
+    }
   },
   "onCreateCommand": ".devcontainer/boot.sh"
 }
