@@ -2,7 +2,7 @@
   "name": "Remix Base",
   "dockerComposeFile": "docker-compose.yml",
   "service": "app",
-  "workspaceFolder": "/workspaces/remixbase",
+  "workspaceFolder": "/workspaces/remix-base",
   "containerEnv": {
     "NODE_ENV": "development",
     "DEVC_WORKSPACE": "${containerWorkspaceFolder}",
