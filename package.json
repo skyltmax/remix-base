@@ -101,7 +101,7 @@
     "@types/set-cookie-parser": "2.4.10",
     "@vitest/coverage-v8": "4.0.18",
     "eslint": "10.8.1",
-    "msw": "2.12.7",
+    "msw": "2.15.0",
     "node-mocks-http": "1.17.2",
     "npm-run-all2": "5.0.2",
     "prettier": "3.9.6",
