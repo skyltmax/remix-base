@@ -4,10 +4,17 @@ allowBuilds:
   esbuild: true
   msw: true
   unrs-resolver: true
-onlyBuiltDependencies:
-  - '@sentry-internal/node-cpu-profiler'
-  - '@sentry/cli'
-  - '@signmax/config'
-  - esbuild
-  - msw
-  - unrs-resolver
+
+# Supply-chain settle, enforced where RESOLUTION happens (3 days, matching the npm settle Renovate applies through
+# config:best-practices). Renovate's own minimumReleaseAge does not govern lockfile maintenance — that PR is produced by
+# the package manager, and the package manager is pnpm reading this file. An explicit value also turns on
+# minimumReleaseAgeStrict, so an immature pick fails the install instead of being auto-excluded.
+minimumReleaseAge: 4320
+# First-party releases come from our own reviewed repos and exist to be validated here the day they are cut, so a settle
+# window buys nothing. Mirrors the Renovate-side exemption in renovate.json5.
+minimumReleaseAgeExclude:
+  - '@signmax/*'
+  - '@skyltmax/*'
+# Skip re-verifying committed lockfile entries on install: entries resolved before this policy existed can be younger
+# than the cutoff, and every commit lands via a reviewed PR, so the lockfile is the trusted base.
+trustLockfile: true

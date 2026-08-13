@@ -1,59 +1,189 @@
 # Upgrade interactions
 
-The landmines a version bump in this repo can step on. The `upgrade-research` workflow
-(`.claude/workflows/upgrade-research.js`) greps this file for every Renovate PR it briefs; keep entries numbered and
-factual. When an upgrade goes sideways for a reason not listed here, add the entry.
+The landmines a version bump in this repo can step on. The impact brief ([`RUNBOOK.md`](RUNBOOK.md)) checks every
+Renovate PR against this file; when an upgrade goes sideways for a reason not listed here, add the entry.
 
-## 1. The devcontainer image is built in skyltmax/infra; Renovate bumps the pin here
+## 1. peerDependencies are the consumer contract
+
+`react-router`, `@react-router/express`, `express`, `@sentry/react-router` and `@sentry/profiling-node` are
+`peerDependencies`: their ranges define what every consumer (the monorepo BFFs) must satisfy. Renovate widens peer
+ranges instead of bumping them, so an in-range minor raises no PR — it arrives only through `lockFileMaintenance` — and
+a major surfaces as a widen (`^7.13.0` → `^7.13.0 || ^8.0.0`).
+
+**Raising a floor or narrowing a range is a breaking change of this package**, never routine maintenance: it forces
+every consumer to upgrade in lockstep with a catalog bump. `react-router` and `@react-router/express` ride the same
+release train and Renovate's `group:monorepos` preset already puts them on one branch — verified: a `react-router` 8
+lookup produces a single `renovate/major-react-router-monorepo` branch. `@sentry/react-router` +
+`@sentry/profiling-node` share the `sentry-javascript` monorepo entry and should group the same way — unverified here,
+since both sit in range and raise no PR yet.
+
+Second-order effect: pnpm's `autoInstallPeers` is on, so the peers are resolved into `pnpm-lock.yaml` from those very
+ranges. Whatever CI typechecks and tests against is the newest in-range peer, not a version we declare anywhere — a
+widen changes what our own build resolves, not just what consumers may install.
+
+## 2. The devcontainer image is built in skyltmax/infra; Renovate bumps the pin here
 
 `.devcontainer/docker-compose.yml` points at `harbor.signmax.cloud/public/devcontainer` with `rails-<upstream>-<N>`
-rebuild-suffix tags, built and versioned in skyltmax/infra. Renovate tracks the pin (regex versioning for the `-N`
-suffix), but two things stay manual on every image PR: the `CHANGELOG_DISPLAYED_<N>` marker in `.devcontainer/boot.sh`
-must be bumped by hand, and the version choice itself originates in infra — if the image looks stale, the fix is an
-infra build, not a pin edit here.
+rebuild-suffix tags built in skyltmax/infra. Renovate tracks the pin (regex versioning for the `-N` suffix); two things
+stay manual on an image PR:
 
-## 2. peerDependencies are the consumer contract
+- bump `CHANGELOG_DISPLAYED_<N>` in `.devcontainer/boot.sh`, or the new image's changelog never prints;
+- if the image changes the Node or pnpm it ships, bump `PNPM_ALREADY_INSTALLED_<N>` too — that marker is what forces
+  `rm -rf node_modules` + a fresh `pnpm install` on next boot, and modules built against the old runtime otherwise
+  survive in the workspace.
 
-`react-router`, `@react-router/express`, `express`, `@sentry/react-router`, `@sentry/profiling-node` are
-peerDependencies: their ranges define what every consumer (the monorepo BFFs) must satisfy. Ranges widen on majors
-rather than bump (Renovate default for peerDeps); a PR that raises a peer range's floor forces every consumer to upgrade
-in lockstep and is a breaking change for this package — treat it as a deliberate, coordinated move with the monorepo
-catalogs, never a routine merge. `react-router` and `@react-router/express` ship on the same release train and must move
-together (grouped in `renovate.json5`).
+The version choice originates in infra: a stale image is fixed by an infra build, not a pin edit here. Anonymous tag
+listing against harbor is rejected, so a local dry-run always logs
+`Failed to look up docker package harbor.signmax.cloud/public/devcontainer: no-result` — expected locally, and no
+statement about the rule.
 
-## 3. GrowthBook sticky-bucket code relies on per-version-verified SDK internals
+## 3. GrowthBook sticky bucketing rides per-version-verified SDK internals
 
 `src/growthbook.ts` depends on `@growthbook/growthbook` behaviour that is not part of the documented API surface:
 `applyStickyBuckets` returning `{ stickyBucketAssignmentDocs, saveStickyBucketAssignmentDoc }`, `getUserContext()`
-returning the live mutable context reference, and evaluation gating sticky bucketing on `saveStickyBucketAssignmentDoc`
-being present (all verified against 1.6.4/1.6.5 sources). On ANY `@growthbook/growthbook` bump: re-verify those three
-facts in the new version's `dist/esm/core.mjs` / `GrowthBookClient.mjs`, and rely on `src/growthbook.test.ts` — it
-exercises exactly these seams. `eventsource` is the polyfill wired via `setPolyfills` at module import for GrowthBook
-streaming; it is grouped with the SDK.
+returning the live mutable context reference, and evaluation gating sticky bucketing on the presence of
+`saveStickyBucketAssignmentDoc` on the user context (verified again against 1.6.5's `dist/esm/core.mjs`).
+`createScopedInstance` and `setForcedFeatures` are the other seams.
 
-## 4. pnpm build-script allowlist
+On ANY `@growthbook/growthbook` bump: re-verify those facts in the new version's `dist/esm/core.mjs` /
+`GrowthBookClient.mjs` and lean on `src/growthbook.test.ts`, which exercises exactly these seams. `eventsource` is the
+polyfill wired through `setPolyfills` at module import for streaming — it is a separate PR (there is no group), so brief
+the two together whenever both are open. Both are `optionalDependencies`: a break here degrades the GrowthBook feature
+for consumers that opt in, it does not break the server.
 
-`pnpm-workspace.yaml` carries `onlyBuiltDependencies` — the explicit allowlist of packages whose postinstall scripts may
-run. pnpm 11 fails `pnpm install` (exit 1) when a dependency wants to run a script that is not listed. A bump that
-introduces or renames a build-script dependency needs the allowlist updated in the same PR, or CI and local installs
-break.
+## 4. Sentry is used through v10-era APIs on both sides of the request
 
-## 5. Merging ≠ releasing
+`src/instrumentation.ts` configures `profileSessionSampleRate` + `profileLifecycle` and composes
+`Sentry.httpIntegration()`, `nodeProfilingIntegration()` and `Sentry.pinoIntegration()`;
+`src/middleware/sentry_scope.ts` uses `getIsolationScope().setAttributes()/setTags()`; `src/router_context.ts` calls
+`Sentry.setUser`. A `@sentry/*` major typically renames or reshapes exactly these (integration factories, the profiling
+options, scope accessors), and `@sentry/react-router` additionally has to keep matching the React Router major in §1 —
+its framework-mode integration is what the peer pair is for.
 
-This is a published library. A merged Renovate PR sits on `main` until a GitHub Release is cut (`release.yml`: stable
-releases publish from the tag matching `package.json`; prerelease tags `v<base>-<pre>.<n>` publish under the `canary`
-dist-tag with `package.json` holding the plain base version). Consumers then bump their pnpm catalog entry.
-Consequences: merged-but-unreleased changes accumulate silently — keep `CHANGELOG.md` → `### Unreleased` current as PRs
-merge, and validate runtime-affecting batches with a canary in the monorepo before the stable release.
+`@sentry/profiling-node` ships a native profiler (`@sentry-internal/node-cpu-profiler`) that must stay in the
+`allowBuilds` list (§8), and `@sentry/cli` runs a postinstall for the same reason.
 
-## 6. @signmax/config carries the shared TypeScript/ESLint/Prettier config
+## 5. @signmax/config owns lint, format and the TypeScript config — and its peer range is wider than what it tests
 
-A `@signmax/config` bump can change compiler strictness, lint rules, or formatting for the whole repo at once. Run
-`pnpm validate` on the PR and expect possible formatting churn; a new lint error surfaced by the bump belongs in the
-same PR only if trivial, otherwise hold and fix separately first.
+`@signmax/config` 2.0 keeps the whole ESLint/Prettier plugin roster in its own `dependencies`; this repo declares only
+the three CLIs it lists as peers: `eslint ^9.30.0 || ^10.0.0`, `prettier ^3.6.0`, `typescript >=5.9 <6.1`. A config bump
+therefore changes lint rules and formatting for the whole repo at once — run `pnpm validate`, and expect the
+`format-check` CI job to fail until the reformat is committed on the PR.
 
-## 7. Node rides CI inline pins, not a manager
+The 2.0 upgrade is the cautionary tale for CLI bumps, and all three cases were "in range, still wrong":
 
-`ci.yml` and `release.yml` pin `node-version: "24"` inline; Renovate's github-actions manager bumps action versions
-(`actions/setup-node@v4`), not the Node version itself. Bumping Node is a manual, deliberate change — coordinate with
-the devcontainer image (interaction 1) and the monorepo's Node version so the library is tested on what consumers run.
+- `prettier` 3.6.2 satisfied `^3.6.0` but the `prettier-plugin-tailwindcss` 0.8.1 the config pins crashed on it
+  (`TypeError: a.startsWith is not a function`); the fix was moving to the 3.9.6 the config repo tests against.
+- `eslint` 9.39.1 satisfied `^9.30.0` but the config's own `@eslint/js` 10 pin declares `eslint ^10`, so pnpm reported
+  an unmet peer; we moved to eslint 10. `eslint-plugin-react` and `eslint-plugin-jsx-a11y` still declare peers that stop
+  at eslint 9 — upstream calls that stale metadata, pnpm warns, nothing fails, and neither plugin has files to lint here
+  (no JSX in `src/`).
+- a newer `@vitest/eslint-plugin` enabled `vitest/no-conditional-expect`, which failed the build on three existing
+  `try/catch` assertions in `src/api/client.test.ts`.
+
+So: treat the config's peer ranges as necessary, not sufficient — the version the config repo pins for itself is the one
+it actually verifies. Note also that `typescript >=5.9 <6.1` caps us: Renovate will happily offer a `typescript` 7 PR
+(it reads our devDependency, not the config's peer), and merging it would break the config's peer contract. A TypeScript
+major waits for a `@signmax/config` release that widens the cap.
+
+## 6. Merging ≠ releasing
+
+A merged PR only changes `main`. This is a published library: `release.yml` publishes `@signmax/remix-base` to npm when
+a GitHub Release is cut (stable releases verify the tag equals `package.json`'s version; prerelease tags
+`v<base>-<pre>.<n>` publish under the `canary` dist-tag with `package.json` still holding the base version), and
+consumers only see it after they bump their pnpm catalog entry. Renovate never touches the version, so:
+
+- keep `CHANGELOG.md` → `### Unreleased` current as PRs merge — it is hand-maintained, which is also why dependency
+  commits are `chore(deps):`, leaving `feat:`/`fix:`/`build:` to mean a change we wrote;
+- a bump that changes runtime behaviour for consumers is a release note, not silent maintenance;
+- validate risky batches with a prerelease and try the canary in the monorepo before releasing stable.
+
+## 7. Renovate's settle time does not govern lockfile maintenance — pnpm's does
+
+`config:best-practices` brings `security:minimumReleaseAgeNpm`, a 3-day settle on npm updates, but that only filters the
+candidates **Renovate itself** proposes: it explicitly sets `minimumReleaseAge: null` for `lockFileMaintenance`, `pin`,
+`replacement`, `bump` and `rollback` updates, because the package manager performs those resolutions. So the weekly
+lockfile PR can pull a transitive published hours ago. The policy is therefore enforced where resolution happens, in
+`pnpm-workspace.yaml`:
+
+- `minimumReleaseAge: 4320` (3 days, matching the Renovate side) — any pnpm ≥11 resolving this workspace, including
+  Renovate's worker, refuses younger versions. Setting it explicitly also turns on `minimumReleaseAgeStrict`, so an
+  immature pick fails the install instead of being auto-excluded;
+- `minimumReleaseAgeExclude: ['@signmax/*', '@skyltmax/*']` — first-party releases exist to be validated here the day
+  they ship (`renovate.json5` carries the matching exemption);
+- `trustLockfile: true` skips re-verification of committed entries on install, because entries resolved before this
+  policy can be younger than the cutoff. Caveat worth knowing in a public repo: it also means a lockfile authored in a
+  fork PR is installed by CI without that re-check;
+- `packageManager: "pnpm@11.20.0"` in `package.json` pins the resolver so CI, the devcontainer and Renovate's worker all
+  apply the same policy. `pnpm/action-setup` reads that field — the workflows deliberately pass no `version:` input, and
+  the action errors when both are given and disagree. Renovate tracks the field as an ordinary npm dep (verified: it
+  produces a `renovate/pnpm-11.x` branch).
+
+Consequence: a release younger than 3 days is invisible to the whole pipeline. For a deliberate early adoption, add a
+temporary `minimumReleaseAgeExclude` entry rather than lowering the global cutoff.
+
+## 8. pnpm build-script allowlist
+
+`pnpm-workspace.yaml` carries `allowBuilds` — the allowlist of packages whose install scripts may run; pnpm fails the
+install otherwise. Current entries: `@sentry-internal/node-cpu-profiler`, `@sentry/cli`, `esbuild`, `msw`,
+`unrs-resolver`. A bump that introduces or renames a build-script dependency must update the allowlist in the same PR.
+
+Two traps: `unrs-resolver` arrives transitively through `@signmax/config`'s `eslint-plugin-import-x`, so it is not
+visible in our `package.json` at all; and pnpm 11 **removed** `onlyBuiltDependencies` (plus `onlyBuiltDependenciesFile`,
+`neverBuiltDependencies`, `ignoredBuiltDependencies`) — a leftover block of that name is silently inert, not a second
+allowlist.
+
+## 9. CI toolchain versions in `with:` blocks are tracked
+
+The github-actions manager extracts `with:` values as depType `uses-with`, so `node-version: "24"` is a tracked
+dependency (verified: `depName: node`, `packageName: actions/node-versions`, `versioning: node`) and raises ordinary
+bump PRs — it is not, as previously assumed here, invisible to Renovate. `pnpm` is not among them; it comes from
+`packageManager` (§7).
+
+Both mirror something owned elsewhere, so the brief's question is "does this match what the devcontainer image ships?"
+(§2) — the image is the local toolchain, and this repo declares no `engines`, so nothing else pins a Node floor for
+consumers. Check the first such PR for precision drift as well: the value is written as a bare major, and a proposal
+that rewrites it to `24.19.0` would pin CI to one patch instead of floating with the image (disable patch updates for it
+if that happens, the way skyltmax/config does for `ruby-version`).
+
+Related: `workarounds:all` gives `@types/node` `node` versioning, which keeps it tracking Node release lines rather than
+plain SemVer — it currently sits a major ahead of the CI Node, which is fine for types but worth a look on any bump.
+
+## 10. Test tooling that must move together
+
+- `@vitest/coverage-v8` declares an **exact** `vitest` peer (`4.0.18` for 4.0.18). Renovate's `vitest` monorepo group
+  keeps them on one branch (verified), but a floating `vitest` range plus an exact `@vitest/coverage-v8` lets
+  `lockFileMaintenance` drift them apart — which is why the `:pinOnlyDevDependencies` pin PR matters (RUNBOOK).
+- `vitest` 4 carries `vite` as a **dependency** with `^6 || ^7`, while we also declare our own `vite` devDependency for
+  `vitest.config.ts` + `vite-tsconfig-paths`. A `vite` major (8) can therefore be merged while vitest still resolves its
+  own vite 7 — two Vite majors in one install. Wait for vitest to widen its range.
+
+## 11. msw is a devDependency that ships in a published export path
+
+`package.json` exposes `./test/helpers`, and `src/test/helpers.ts` imports `msw` — yet `msw` is only a devDependency.
+Consumers importing that path resolve `msw` from their own tree, so an msw major changes a **published** contract even
+though nothing in our dependency blocks says so. Check `src/test/helpers.ts` against the new msw API on every msw major,
+and treat it as consumer-visible in the CHANGELOG (§6).
+
+## 12. pino-http is loaded through a CJS/ESM interop shim
+
+`src/logger.ts` does `"default" in pinohttpImport ? pinohttpImport.default : pinohttpImport` (with an
+`@typescript-eslint/no-explicit-any` disable on it) because pino-http's ESM export shape is ambiguous. If a bump changes
+that shape, the shim silently yields a non-function and every request-logging call fails at runtime — typecheck won't
+catch it, since the shim is typed `any`. `pino` itself is used through `stdTimeFunctions.isoTime`, `formatters.level`
+and the `Logger` type re-exported in `src/router_context.ts`.
+
+## 13. Express 5 syntax is baked into the server
+
+`src/server.ts` mounts the React Router handler on `app.all("*splat", …)` — Express 5 named-wildcard syntax that is
+invalid in Express 4 and could move again in Express 6. Also Express-5-specific: `res.appendHeader` in
+`src/api/client.ts`, `req.hostname` throwing on a malformed Host header (wrapped in try/catch in
+`src/middleware/sentry_scope.ts`), and the `trust proxy` array assembled in `src/cloudfront-ips/updater.ts`. An
+`express` major is a peer-range change (§1) **and** a code change here.
+
+## 14. The CloudFront IP snapshots are tracked by nothing
+
+`src/cloudfront-ips/{backup,vpc}.json` are hand-maintained snapshots copied into `dist/` by the build script (they are
+data, not dependencies — no manager sees them). `backup.json` is only the bootstrap list until the first live fetch from
+`ip-ranges.amazonaws.com` succeeds, so staleness degrades the trust-proxy list for the first moments of a process rather
+than breaking it. Refresh it deliberately; no Renovate PR will ever remind you.

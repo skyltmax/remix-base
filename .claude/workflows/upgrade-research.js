@@ -15,7 +15,7 @@ export const meta = {
 //   Workflow({ name: 'upgrade-research' })                 // brief ALL open Renovate PRs
 //   Workflow({ name: 'upgrade-research', args: [5, 12] })  // brief only these PR numbers
 // Read-only: repo + web only. Merging here is NOT a deploy — this is a published library; changes
-// reach consumers via a GitHub Release + a monorepo catalog bump (INTERACTIONS §5). Nothing in this
+// reach consumers via a GitHub Release + a monorepo catalog bump (INTERACTIONS §6). Nothing in this
 // workflow merges or releases anything.
 
 const PRS_SCHEMA = {
@@ -151,7 +151,8 @@ const briefs = (
           upgrade — breaking for the package even if our code is untouched); optionalDependencies =
           feature-gated (growthbook/eventsource). Cite the path you checked.
        3. Cross-ref docs/upgrades/INTERACTIONS.md — list any entry this triggers + its manual step
-          (growthbook bumps ALWAYS trigger §3; peer changes §2; image PRs §1).
+          (growthbook bumps ALWAYS trigger §3; peer changes §1; image PRs §2; anything eslint/prettier/
+          typescript/@signmax/config §5; lockfile-maintenance and pnpm-version PRs §7).
        4. Verdict: breakingForUs (default true if genuinely unsure), requiredChanges, confidence.`,
             { label: `dep:${d.name}`, phase: "Research", schema: DEP_VERDICT_SCHEMA }
           )
@@ -165,7 +166,7 @@ const briefs = (
      the boot.sh CHANGELOG_DISPLAYED marker bump committed on the PR), which surfaces it touches (dep
      types + src modules + ci/devcontainer), and notes. Remember: merging does NOT publish — consumer-
      visible changes need a CHANGELOG.md Unreleased entry and reach consumers via a release + monorepo
-     catalog bump (INTERACTIONS §5). Carry the per-dep verdicts through unchanged.`,
+     catalog bump (INTERACTIONS §6). Carry the per-dep verdicts through unchanged.`,
         { label: `brief:#${pr.number}`, phase: "Research", schema: PR_BRIEF_SCHEMA }
       )
     )

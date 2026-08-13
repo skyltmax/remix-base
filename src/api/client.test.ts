@@ -44,12 +44,10 @@ describe("GraphQL client", () => {
       const res = httpMocks.createResponse()
       const request = createRequest(req, res, createResponseMiddleware(req, res))
 
-      try {
-        await request(doc)
-      } catch (e) {
-        expect(e).toBeInstanceOf(Response)
-        expect((e as Response).status).toBe(403)
-      }
+      const error: unknown = await request(doc).catch((e: unknown) => e)
+
+      expect(error).toBeInstanceOf(Response)
+      expect((error as Response).status).toBe(403)
     })
 
     it("passes headers to the backend", async () => {
@@ -254,13 +252,10 @@ describe("GraphQL client", () => {
       const res = httpMocks.createResponse()
       const request = createRequest(req, res, createResponseMiddleware(req, res))
 
-      try {
-        await request(doc, { password: "secret123" })
-        throw new Error("Should have thrown")
-      } catch (e) {
-        expect(e).toBeInstanceOf(Response)
-        expect((e as Response).status).toBe(400)
-      }
+      const error: unknown = await request(doc, { password: "secret123" }).catch((e: unknown) => e)
+
+      expect(error).toBeInstanceOf(Response)
+      expect((error as Response).status).toBe(400)
     })
 
     it("should handle generic errors", async () => {
@@ -286,14 +281,11 @@ describe("GraphQL client", () => {
       const res = httpMocks.createResponse()
       const request = createRequest(req, res, createResponseMiddleware(req, res))
 
-      try {
-        await request(doc)
-        throw new Error("Should have thrown")
-      } catch (e) {
-        // Generic errors from the API are converted to Response objects
-        expect(e).toBeInstanceOf(Response)
-        expect((e as Response).status).toBe(500)
-      }
+      const error: unknown = await request(doc).catch((e: unknown) => e)
+
+      // Generic errors from the API are converted to Response objects
+      expect(error).toBeInstanceOf(Response)
+      expect((error as Response).status).toBe(500)
     })
 
     it("should handle multiple cookies in set-cookie header", async () => {
