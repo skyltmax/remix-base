@@ -2,6 +2,8 @@
 
 ### Unreleased
 
+### [0.0.5] - 2026-08-13
+
 - feat: GrowthBook sticky bucketing support (`stickyBucketService` option and `refreshStickyBuckets`). Breaking:
   `createScopedGrowthBook` is now async.
 - build: Bump `@growthbook/growthbook` to `^1.6.5`.
