@@ -76,19 +76,19 @@ importers:
         specifier: 2.0.0
         version: 2.0.0(@typescript-eslint/eslint-plugin@8.66.0(@typescript-eslint/parser@8.66.0(eslint@10.8.1(jiti@2.6.1)(supports-color@7.2.0))(supports-color@7.2.0)(typescript@5.9.3))(eslint@10.8.1(jiti@2.6.1)(supports-color@7.2.0))(supports-color@7.2.0)(typescript@5.9.3))(@typescript-eslint/utils@8.66.0(eslint@10.8.1(jiti@2.6.1)(supports-color@7.2.0))(supports-color@7.2.0)(typescript@5.9.3))(eslint@10.8.1(jiti@2.6.1)(supports-color@7.2.0))(prettier@3.9.6)(supports-color@7.2.0)(typescript@5.9.3)(vitest@4.0.18(@opentelemetry/api@1.9.0)(@types/node@25.1.0)(jiti@2.6.1)(msw@2.12.7(@types/node@25.1.0)(typescript@5.9.3)))
       '@types/compression':
-        specifier: ^1.8.1
+        specifier: 1.8.1
         version: 1.8.1
       '@types/cookie-parser':
-        specifier: ^1.4.10
+        specifier: 1.4.10
         version: 1.4.10(@types/express@5.0.6)
       '@types/express':
-        specifier: ^5.0.6
+        specifier: 5.0.6
         version: 5.0.6
       '@types/node':
-        specifier: ^25.1.0
+        specifier: 25.1.0
         version: 25.1.0
       '@types/set-cookie-parser':
-        specifier: ^2.4.10
+        specifier: 2.4.10
         version: 2.4.10
       '@vitest/coverage-v8':
         specifier: 4.0.18
@@ -97,13 +97,13 @@ importers:
         specifier: 10.8.1
         version: 10.8.1(jiti@2.6.1)(supports-color@7.2.0)
       msw:
-        specifier: ^2.12.7
+        specifier: 2.12.7
         version: 2.12.7(@types/node@25.1.0)(typescript@5.9.3)
       node-mocks-http:
-        specifier: ^1.17.2
+        specifier: 1.17.2
         version: 1.17.2(@types/express@5.0.6)(@types/node@25.1.0)
       npm-run-all2:
-        specifier: ^5.0.0
+        specifier: 5.0.2
         version: 5.0.2
       prettier:
         specifier: 3.9.6
@@ -115,13 +115,13 @@ importers:
         specifier: 5.9.3
         version: 5.9.3
       vite:
-        specifier: ^7.3.1
+        specifier: 7.3.1
         version: 7.3.1(@types/node@25.1.0)(jiti@2.6.1)
       vite-tsconfig-paths:
-        specifier: ^6.0.5
+        specifier: 6.0.5
         version: 6.0.5(supports-color@7.2.0)(typescript@5.9.3)(vite@7.3.1(@types/node@25.1.0)(jiti@2.6.1))
       vitest:
-        specifier: ^4.0.18
+        specifier: 4.0.18
         version: 4.0.18(@opentelemetry/api@1.9.0)(@types/node@25.1.0)(jiti@2.6.1)(msw@2.12.7(@types/node@25.1.0)(typescript@5.9.3))
     optionalDependencies:
       '@growthbook/growthbook':
