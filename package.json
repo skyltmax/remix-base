@@ -115,7 +115,7 @@
     "@aws-sdk/client-secrets-manager": "^3.978.0",
     "@nichtsam/helmet": "^0.3.1",
     "@tusbar/cache-control": "^3.0.0",
-    "chalk": "^5.6.2",
+    "chalk": "^6.0.0",
     "close-with-grace": "^2.4.0",
     "compression": "^1.8.1",
     "cookie-parser": "^1.4.7",
