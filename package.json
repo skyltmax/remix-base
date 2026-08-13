@@ -138,6 +138,6 @@
   },
   "optionalDependencies": {
     "@growthbook/growthbook": "^1.6.5",
-    "eventsource": "^4.1.0"
+    "eventsource": "^5.0.0"
   }
 }
