@@ -1,9 +1,16 @@
 # @signmax/remix-base
 
-**Production-ready server and shared utilities for React Router 7 apps.**
+**Production-ready server and shared utilities for React Router 8 apps.**
 
 `@signmax/remix-base` bundles an opinionated Express 5 setup, middleware suite, instrumentation, and utilities so you
-can ship React Router 7 (framework middleware mode) projects without re-writing the same server glue.
+can ship React Router 8 projects without re-writing the same server glue.
+
+## Requirements
+
+- React Router `^8.0.0` (`react-router` and `@react-router/express`) — middleware and `RouterContextProvider` are
+  unconditional in v8, so no future flags are needed
+- Node `>=22.22.0`, the floor React Router 8 sets
+- Express `^5.0.0`
 
 ## Quick Start
 
@@ -27,7 +34,7 @@ await serveApp(build, {})
 - Built-in Sentry scope middleware that enriches every request with filtered params, tags, and user IP
 - Structured logging via Pino and Prometheus metrics endpoint
 - GraphQL helpers with cookie pass-through and shared-secret auth
-- React Router 7 server context (`serverContext`) and optional GrowthBook context
+- React Router 8 server context (`serverContext`) and optional GrowthBook context
 - AWS Secrets Manager helper
 - TypeScript-first API with comprehensive tests
 
@@ -60,9 +67,9 @@ Prometheus endpoint.
 
 ## Router Context
 
-`@signmax/remix-base/router_context` plugs into React Router 7's middleware mode. `getServerContext` returns a
+`@signmax/remix-base/router_context` plugs into React Router's middleware context. `getServerContext` returns a
 `RouterContextProvider` seeded with the per-request `serverContext` value (revision, logger, IP, CSP nonce, and the
-GraphQL request function).
+GraphQL request function) — the shape React Router 8 requires every `getLoadContext` to return.
 
 ```typescript
 import { serverContext } from "@signmax/remix-base/router_context"

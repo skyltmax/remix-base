@@ -2,6 +2,8 @@
 
 ### Unreleased
 
+- feat!: React Router 8.
+
 ### [0.0.5] - 2026-08-13
 
 - feat: GrowthBook sticky bucketing support (`stickyBucketService` option and `refreshStickyBuckets`). Breaking:

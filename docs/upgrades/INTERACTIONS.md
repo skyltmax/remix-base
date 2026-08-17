@@ -18,8 +18,31 @@ lookup produces a single `renovate/major-react-router-monorepo` branch. `@sentry
 since both sit in range and raise no PR yet.
 
 Second-order effect: pnpm's `autoInstallPeers` is on, so the peers are resolved into `pnpm-lock.yaml` from those very
-ranges. Whatever CI typechecks and tests against is the newest in-range peer, not a version we declare anywhere — a
-widen changes what our own build resolves, not just what consumers may install.
+ranges — a peer's resolved version is one CI typechecks and tests against, not a version we declare anywhere.
+
+**A merged widen does not move that resolution, and this is the trap.** pnpm keeps an existing lockfile entry whenever
+the new range still satisfies it, so `^7.13.0` → `^7.13.0 || ^8.0.0` left `pnpm-lock.yaml` on `react-router@7.18.2`
+while `package.json` advertised v8 to consumers. Every CI run in between validated a v7 tree against a v8 promise. Only
+`pnpm update` or `lockFileMaintenance` re-resolves — meaning the weekly lockfile PR is what silently ships the new major
+into our own build, days after the widen was briefed and forgotten.
+
+So a React Router major is briefed **twice**, and the two PRs are not the same review:
+
+1. the widen — merge it only as a decision to support both majors, and re-resolve the lockfile in the same PR
+   (`pnpm update react-router @react-router/express`) so CI proves the new one;
+2. the narrow — hand-edit the range to the new major alone. Renovate never opens this PR.
+
+Current policy: **this package tracks a single React Router major.** The range is `^8.0.0`, narrowed by hand in the v8
+upgrade after a widen sat unvalidated on `main`. Narrowing invalidates the stale entries, so a plain `pnpm install`
+re-resolves — no `pnpm update` needed. `engines.node` (`>=22.22.0`) now mirrors the floor React Router 8 declares, and
+must move with any future major (§9).
+
+What the v8 upgrade did **not** require, and what that says about the next one: no `src/` change at all.
+`createContext`, `RouterContextProvider`, `HeadersArgs`, `ServerBuild` and the express adapter's `createRequestHandler`
+were identical across 7.18.2 → 8.3.0, and `GetLoadContextFunction` only dropped its
+`UNSAFE_MiddlewareEnabled extends true ? … : AppLoadContext` conditional — `getServerContext` already returned a
+`RouterContextProvider`. Diff the published `.d.ts` before assuming a major touches us:
+`curl -sL $(npm view <pkg>@<ver> dist.tarball) | tar -xzO package/dist/index.d.ts`.
 
 ## 2. The devcontainer image is built in skyltmax/infra; Renovate bumps the pin here
 
@@ -143,10 +166,12 @@ bump PRs — it is not, as previously assumed here, invisible to Renovate. `pnpm
 `packageManager` (§7).
 
 Both mirror something owned elsewhere, so the brief's question is "does this match what the devcontainer image ships?"
-(§2) — the image is the local toolchain, and this repo declares no `engines`, so nothing else pins a Node floor for
-consumers. Check the first such PR for precision drift as well: the value is written as a bare major, and a proposal
-that rewrites it to `24.19.0` would pin CI to one patch instead of floating with the image (disable patch updates for it
-if that happens, the way skyltmax/config does for `ruby-version`).
+(§2) — the image is the local toolchain. There is now a third Node number to keep straight: `engines.node`
+(`>=22.22.0`), added with the React Router 8 upgrade, is the floor we impose on **consumers**, and it tracks React
+Router's floor rather than our CI or the image (§1). CI's `24` and the image only need to clear it, never match it.
+Check the first such PR for precision drift as well: the value is written as a bare major, and a proposal that rewrites
+it to `24.19.0` would pin CI to one patch instead of floating with the image (disable patch updates for it if that
+happens, the way skyltmax/config does for `ruby-version`).
 
 Related: `workarounds:all` gives `@types/node` `node` versioning, which keeps it tracking Node release lines rather than
 plain SemVer — it currently sits a major ahead of the CI Node, which is fine for types but worth a look on any bump.

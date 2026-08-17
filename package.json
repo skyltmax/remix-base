@@ -4,7 +4,7 @@
     "access": "public"
   },
   "version": "0.0.5",
-  "description": "Server and shared utils for React Router 7 projects",
+  "description": "Server and shared utils for React Router 8 projects",
   "license": "MIT",
   "author": "Signmax AB <team@signomatic.ee> (https://skyltmax.se/)",
   "homepage": "https://github.com/skyltmax/remix-base#readme",
@@ -24,6 +24,9 @@
   "sideEffects": false,
   "type": "module",
   "packageManager": "pnpm@11.22.0",
+  "engines": {
+    "node": ">=22.22.0"
+  },
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "exports": {
@@ -108,7 +111,6 @@
     "tslib": "2.8.1",
     "typescript": "5.9.3",
     "vite": "8.2.1",
-    "vite-tsconfig-paths": "6.1.1",
     "vitest": "4.1.10"
   },
   "dependencies": {
@@ -130,11 +132,11 @@
     "set-cookie-parser": "^3.0.1"
   },
   "peerDependencies": {
-    "@react-router/express": "^7.13.0 || ^8.0.0",
+    "@react-router/express": "^8.0.0",
     "@sentry/profiling-node": "^10.0.0",
     "@sentry/react-router": "^10.0.0",
     "express": "^5.0.0",
-    "react-router": "^7.13.0 || ^8.0.0"
+    "react-router": "^8.0.0"
   },
   "optionalDependencies": {
     "@growthbook/growthbook": "^1.6.5",
