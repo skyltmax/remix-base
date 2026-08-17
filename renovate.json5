@@ -28,20 +28,19 @@
     },
 
     // --- Harbor images: built in skyltmax/infra, tracked here ---
-    // Tags carry <upstream>-<N> rebuild suffixes, which docker versioning would misread as a compatibility suffix —
-    // regex versioning treats <N> as a build counter, so rails-4.0.6-30 -> rails-4.0.6-31 is an update. A wrong match
-    // shows "no update" while new images keep publishing. The CHANGELOG_DISPLAYED_<N> marker in .devcontainer/boot.sh
-    // still needs a manual commit on the PR (§2).
-    {
-      matchPackageNames: ["harbor.signmax.cloud/**"],
-      groupName: "harbor images",
-      addLabels: ["cross-repo/infra"],
-      versioning: "regex:^(?<major>\\d+)\\.(?<minor>\\d+)\\.(?<patch>\\d+)-(?<build>\\d+)$",
-    },
-    // The devcontainer image prefixes its tags with the stack name (devcontainer:rails-4.0.6-30).
+    // The devcontainer image is the only harbor pin in this repo, and it dropped the `rails-<upstream>` stack prefix at
+    // image 32 — a tag is now the bare build counter (devcontainer:35), which docker versioning cannot order. Regex
+    // versioning maps the counter to `patch`, so 35 -> 36 is an ordinary update. `patch`, NOT `major`: regex versioning
+    // requires at least one of major/minor/patch, and a `major` change would push every image rebuild behind
+    // :approveMajorUpdates' dashboard gate instead of the weekly batch. Cost of a bare-integer pattern: any all-digit
+    // tag on this repo (a date stamp, say) parses as a counter and would be proposed as an update. A wrong match shows
+    // "no update" while new images keep publishing. The CHANGELOG_DISPLAYED_<N> marker in .devcontainer/boot.sh still
+    // needs a manual commit on the PR (§2).
     {
       matchPackageNames: ["harbor.signmax.cloud/public/devcontainer"],
-      versioning: "regex:^rails-(?<major>\\d+)\\.(?<minor>\\d+)\\.(?<patch>\\d+)-(?<build>\\d+)$",
+      groupName: "harbor images",
+      addLabels: ["cross-repo/infra"],
+      versioning: "regex:^(?<patch>\\d+)$",
     },
   ],
 }

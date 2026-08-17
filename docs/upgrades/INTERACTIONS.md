@@ -23,14 +23,16 @@ widen changes what our own build resolves, not just what consumers may install.
 
 ## 2. The devcontainer image is built in skyltmax/infra; Renovate bumps the pin here
 
-`.devcontainer/docker-compose.yml` points at `harbor.signmax.cloud/public/devcontainer` with `rails-<upstream>-<N>`
-rebuild-suffix tags built in skyltmax/infra. Renovate tracks the pin (regex versioning for the `-N` suffix); two things
-stay manual on an image PR:
+`.devcontainer/docker-compose.yml` points at `harbor.signmax.cloud/public/devcontainer`, built in skyltmax/infra. The
+tag is a bare build counter (`:35`) — the `rails-<upstream>` stack prefix was dropped at image 32 — so `renovate.json5`
+gives it regex versioning that maps the counter to `patch`, and `docker:pinDigests` adds the `@sha256:…` on top. Two
+things stay manual on an image PR:
 
 - bump `CHANGELOG_DISPLAYED_<N>` in `.devcontainer/boot.sh`, or the new image's changelog never prints;
-- if the image changes the Node or pnpm it ships, bump `PNPM_ALREADY_INSTALLED_<N>` too — that marker is what forces
+- if the image changes the Node or pnpm it ships, bump `PNPM_ALREADY_RESET_<N>` too — that marker is what forces
   `rm -rf node_modules` + a fresh `pnpm install` on next boot, and modules built against the old runtime otherwise
-  survive in the workspace.
+  survive in the workspace bind. `.devcontainer/.bootdone` is gitignored, so it is the committed marker names in
+  `boot.sh` that decide whether a reset runs, not any local state.
 
 The version choice originates in infra: a stale image is fixed by an infra build, not a pin edit here. Anonymous tag
 listing against harbor is rejected, so a local dry-run always logs
@@ -114,7 +116,7 @@ lockfile PR can pull a transitive published hours ago. The policy is therefore e
 - `trustLockfile: true` skips re-verification of committed entries on install, because entries resolved before this
   policy can be younger than the cutoff. Caveat worth knowing in a public repo: it also means a lockfile authored in a
   fork PR is installed by CI without that re-check;
-- `packageManager: "pnpm@11.20.0"` in `package.json` pins the resolver so CI, the devcontainer and Renovate's worker all
+- `packageManager: "pnpm@11.22.0"` in `package.json` pins the resolver so CI, the devcontainer and Renovate's worker all
   apply the same policy. `pnpm/action-setup` reads that field — the workflows deliberately pass no `version:` input, and
   the action errors when both are given and disagree. Renovate tracks the field as an ordinary npm dep (verified: it
   produces a `renovate/pnpm-11.x` branch).

@@ -18,19 +18,19 @@ if [ "${PNPM_ALREADY_RESET_2}" != "true" ]; then
   PNPM_ALREADY_RESET_2="true"
 fi
 
-if [ "${CHANGELOG_DISPLAYED_26}" != "true" ]; then
+if [ "${CHANGELOG_DISPLAYED_35}" != "true" ]; then
   if [ -f "/var/lib/smdevc/changelog" ]; then
     printf "\n"
     toilet -f term -t -F border:metal "Latest Changes"
     cat /var/lib/smdevc/changelog
   fi
 
-  CHANGELOG_DISPLAYED_26="true"
+  CHANGELOG_DISPLAYED_35="true"
 fi
 
 echo -e "\
   PNPM_ALREADY_RESET_2=${PNPM_ALREADY_RESET_2}\n\
-  CHANGELOG_DISPLAYED_26=${CHANGELOG_DISPLAYED_26}" > "${MARKER_FILE}"
+  CHANGELOG_DISPLAYED_35=${CHANGELOG_DISPLAYED_35}" > "${MARKER_FILE}"
 
 printf "\n\n\e[38;2;252;163;17m"
 toilet -f standard "Remix Base"

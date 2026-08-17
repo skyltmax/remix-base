@@ -4,7 +4,7 @@ How we keep every dependency in this repo current. Two layers:
 
 - **Layer 1 — Renovate (mechanical):** detects pins, opens bump PRs, refreshes the lockfile, dumps changelogs. Config:
   [`renovate.json5`](../../renovate.json5). Preset-first — the only custom rules are the first-party settle exemption
-  and the harbor rebuild-suffix versionings. Zero awareness of our usage.
+  and the harbor devcontainer's build-counter versioning. Zero awareness of our usage.
 - **Layer 2 — the impact brief:** per-PR research grounded in this repo + [`INTERACTIONS.md`](INTERACTIONS.md). This is
   what decides what merges. Either run the `upgrade-research` workflow
   ([`.claude/workflows/upgrade-research.js`](../../.claude/workflows/upgrade-research.js)) or have a Claude session read
@@ -109,8 +109,9 @@ carries no risk heuristics beyond major-gating; the brief is the gate.
    apart.
 3. **Peer ranges** — peers widen, so a peer-CLI minor raises no PR; it flows in through `lockFileMaintenance`. A PR that
    raises or narrows a peer floor is a breaking release of this package, never routine (§1).
-4. **Harbor** — the regex versioning must order rebuild suffixes: `rails-4.0.6-31` has to show as an update to
-   `rails-4.0.6-30`. A local dry-run logs `Failed to look up docker package …` because anonymous tag listing is
-   rejected; that failure is expected locally and means nothing about the rule.
+4. **Harbor** — the regex versioning must order the devcontainer's build counter: `36` has to show as a patch update to
+   `35`, not a major (a major lands behind the dashboard gate instead of the weekly batch). A local dry-run logs
+   `Failed to look up docker package …` because anonymous tag listing is rejected; that failure is expected locally and
+   means nothing about the rule.
 5. **Advisories** — this config raises no `[SECURITY]` PRs (`osvVulnerabilityAlerts` is off). Check the repository's
    Dependabot alerts tab with each batch and act on a mid-week advisory by hand.
