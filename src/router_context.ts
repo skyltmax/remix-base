@@ -21,6 +21,7 @@ declare module "http" {
 
 const REVISION = getRevision()
 
+// eslint-disable-next-line @eslint-react/naming-convention-context-name
 export const serverContext = createContext<ServerContext>()
 
 export const getServerContext = (request: express.Request, response: express.Response) => {

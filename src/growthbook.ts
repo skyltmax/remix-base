@@ -102,4 +102,5 @@ export const refreshStickyBuckets = async (
   }
 }
 
+// eslint-disable-next-line @eslint-react/naming-convention-context-name
 export const growthbookContext = createContext<UserScopedGrowthBook | undefined>()
