@@ -2,6 +2,9 @@
 
 ### Unreleased
 
+- feat: Optional `skip` predicate on `deviceKeyMiddleware` plus an `isBotRequest` helper, so bot traffic no longer mints
+  device keys or triggers `Set-Cookie`.
+
 ### [1.0.0] - 2026-08-21
 
 - feat!: React Router 8.
