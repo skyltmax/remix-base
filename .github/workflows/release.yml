@@ -92,7 +92,9 @@ jobs:
       - name: Install dependencies
         run: pnpm install
       - name: Publish package
-        run: npm publish --access public
+        # This is the 0.0.x maintenance line, published after 1.0.0. An untagged publish would move the `latest`
+        # dist-tag backwards onto this version and downgrade every fresh install, so pin it to `legacy` instead.
+        run: npm publish --tag legacy --access public
   publish_npm_canary:
     name: Publish npm canary
     needs: verify_prerelease
