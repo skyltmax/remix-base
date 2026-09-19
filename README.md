@@ -93,6 +93,7 @@ import {
 
 import {
   BrowserDetection,
+  isBotRequest,
   pipeHeaders,
   getConservativeCacheControl,
   makeTimings,
@@ -102,6 +103,25 @@ import {
 ```
 
 - `cspMiddleware` seeds `res.locals.cspNonce` with a fresh nonce on every request.
+- `deviceKeyMiddleware` is a factory that mints a `randomUUID()` anonymous identifier for any request that does not
+  already carry the cookie, patches it onto the request so the same request can read it back, and writes the
+  `Set-Cookie`. Options: `cookieName` (`device_key`), `maxAge` (one year), and `skip`:
+
+  ```typescript
+  import { deviceKeyMiddleware, isBotRequest } from "@signmax/remix-base/middleware"
+
+  deviceKeyMiddleware({ cookieName: "sm_device_key", skip: isBotRequest })
+  ```
+
+  When `skip` returns true the middleware does nothing: no key is minted, no cookie header is patched onto the request,
+  and no `Set-Cookie` is written, so downstream reads of the key return `undefined`. Pass `skip: isBotRequest` on any
+  app serving public traffic. Crawlers do not retain cookies, so without it every crawler request mints a throwaway
+  identifier — which inflates the device population of anything using the key as an experiment randomisation unit — and
+  attracts a `Set-Cookie` header that many CDNs treat as a signal not to cache the response.
+
+  `skip` is an injectable predicate rather than built-in detection because bot lists change faster than this package
+  releases; `isBotRequest` is just `isbot(req.headers["user-agent"])` and can be swapped or extended freely.
+
 - `requestMiddleware` is a factory that accepts GraphQL client options and returns middleware that attaches a GraphQL
   request helper to `req.request`:
 
@@ -198,6 +218,22 @@ The region falls back to `AWS_REGION` or `eu-central-1`.
     return context
   }
   ```
+
+  `createScopedGrowthBook` derives these attributes from the request on every call:
+
+  | Attribute    | Source                     | Value                                                              |
+  | ------------ | -------------------------- | ------------------------------------------------------------------ |
+  | `url`        | `req.url`                  | Path **and** query string, e.g. `/products?ref=email`              |
+  | `path`       | `req.path`                 | Path only, e.g. `/products`                                        |
+  | `host`       | `Host` header              | e.g. `example.com`; `undefined` if the header is absent            |
+  | `deviceType` | `BrowserDetection.mobile`  | `mobile` or `desktop`                                              |
+  | `browser`    | `BrowserDetection.browser` | `chrome`, `safari`, `firefox`, `edge`, `opera`, `ie`, or `unknown` |
+  | `bot`        | `isBotRequest`             | `true` for crawlers                                                |
+  | `deviceId`   | `options.deviceId`         | Whatever you pass; `undefined` when omitted                        |
+
+  `options.attributes` is merged last, so it can add new attributes or override any of the above. Pass `deviceId` as the
+  value of your device-key cookie to use it as the experiment randomisation unit — and pair it with
+  `deviceKeyMiddleware`'s `skip: isBotRequest` so crawlers never mint one.
 
   Pass a `stickyBucketService` (an implementation of the SDK's `StickyBucketService`) to persist experiment assignments
   across sessions. Bot requests skip the service entirely, and store failures fail open to hash-based assignment. If

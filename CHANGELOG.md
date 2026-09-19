@@ -2,6 +2,11 @@
 
 ### Unreleased
 
+### [0.0.6] - 2026-09-19
+
+- feat: Optional `skip` predicate on `deviceKeyMiddleware` plus an `isBotRequest` helper, so bot traffic no longer mints
+  device keys or triggers `Set-Cookie`. Backported from 1.0.0.
+
 ### [0.0.5] - 2026-08-13
 
 - feat: GrowthBook sticky bucketing support (`stickyBucketService` option and `refreshStickyBuckets`). Breaking:

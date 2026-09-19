@@ -8,9 +8,9 @@ import {
 } from "@growthbook/growthbook"
 import { EventSource } from "eventsource"
 import type * as express from "express"
-import { isbot } from "isbot"
 import { createContext } from "react-router"
 import logger from "./logger.js"
+import { isBotRequest } from "./util/bot.js"
 import { BrowserDetection } from "./util/browser_detection.js"
 
 setPolyfills({
@@ -52,7 +52,7 @@ export const createScopedGrowthBook = async (
   options?: ScopedGrowthbookOptions
 ): Promise<UserScopedGrowthBook> => {
   const userAgent = request.headers["user-agent"] || ""
-  const bot = isbot(userAgent)
+  const bot = isBotRequest(request)
 
   const attributes: Attributes = {
     url: request.url,
