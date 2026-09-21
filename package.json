@@ -103,7 +103,7 @@
     "@types/node": "24.13.3",
     "@types/set-cookie-parser": "2.4.10",
     "@vitest/coverage-v8": "4.1.11",
-    "eslint": "10.8.1",
+    "eslint": "10.11.0",
     "msw": "2.15.0",
     "node-mocks-http": "1.18.1",
     "npm-run-all2": "9.0.3",
