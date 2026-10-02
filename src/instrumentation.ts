@@ -25,10 +25,20 @@ export function init(config: Parameters<typeof Sentry.init>[0]) {
     tracesSampleRate: 1,
     profileSessionSampleRate: 0.1,
     profileLifecycle: "trace",
-    sendDefaultPii: true,
+    // Replaces the deprecated `sendDefaultPii: true`; setting `dataCollection` at all switches to the SDK defaults (user
+    // info, cookies, headers, query params on). No custom deny list needed: the SDK always filters keys matching its
+    // built-in sensitive snippets (auth, token, session, cookie, key, ...), which covers our session and device key
+    // cookies and the Authorization/Cookie headers. A caller-supplied `sendDefaultPii` is ignored once this is set.
+    dataCollection: { httpBodies: [] },
     denyUrls: defaultDenyUrls,
     enableLogs: true,
-    integrations: [Sentry.httpIntegration(), nodeProfilingIntegration(), Sentry.pinoIntegration()],
+    integrations: [
+      // Incoming request body capture is gated only by this option, not by `dataCollection.httpBodies`, and the
+      // captured body is attached to every event including transactions (e.g. login POSTs).
+      Sentry.httpIntegration({ maxIncomingRequestBodySize: "none" }),
+      nodeProfilingIntegration(),
+      Sentry.pinoIntegration(),
+    ],
     beforeSendLog(event) {
       const req = event.attributes?.["req"] as { url?: string; method?: string } | undefined
 

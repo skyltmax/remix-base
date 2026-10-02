@@ -6,6 +6,8 @@
 
 - feat: Optional `skip` predicate on `deviceKeyMiddleware` plus an `isBotRequest` helper, so bot traffic no longer mints
   device keys or triggers `Set-Cookie`. Backported from 1.0.0.
+- fix: Stop attaching incoming request bodies to Sentry events.
+- ref: Replace the deprecated `sendDefaultPii: true` with `dataCollection`.
 
 ### [0.0.5] - 2026-08-13
 
