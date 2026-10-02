@@ -60,7 +60,8 @@ export function init(config: Parameters<typeof Sentry.init>[0]) {
       return event
     },
     tracesSampler(samplingContext) {
-      if (samplingContext.request?.url?.includes("/readyz") || samplingContext.request?.url?.includes("/livez")) {
+      const url = samplingContext.request?.url
+      if (url?.includes("/readyz") || url?.includes("/livez") || url?.includes("/metrics")) {
         return 0
       }
       return tracesSampleRate

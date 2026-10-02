@@ -118,6 +118,11 @@ describe("init", () => {
       expect(getSampler()({ request: { url: "/livez" } })).toBe(0)
     })
 
+    it("drops /metrics requests", () => {
+      init(baseConfig)
+      expect(getSampler()({ request: { url: "/metrics" } })).toBe(0)
+    })
+
     it("uses default rate of 1 for other requests", () => {
       init(baseConfig)
       expect(getSampler()({ request: { url: "/home" } })).toBe(1)

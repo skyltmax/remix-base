@@ -6,6 +6,7 @@
   device keys or triggers `Set-Cookie`.
 - fix: Stop attaching incoming request bodies to Sentry events.
 - ref: Replace the deprecated `sendDefaultPii: true` with `dataCollection`.
+- fix: Skip tracing for `/metrics` requests.
 
 ### [1.0.0] - 2026-08-21
 
