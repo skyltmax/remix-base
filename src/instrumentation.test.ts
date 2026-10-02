@@ -57,7 +57,7 @@ describe("init", () => {
     init({
       tracesSampleRate: 0.75,
       profileSessionSampleRate: 0.25,
-      sendDefaultPii: false,
+      dataCollection: { userInfo: false },
       enabled: true,
     })
 
@@ -67,7 +67,7 @@ describe("init", () => {
 
     expect(options.tracesSampleRate).toBe(0.75)
     expect(options.profileSessionSampleRate).toBe(0.25)
-    expect(options.sendDefaultPii).toBe(false)
+    expect(options.dataCollection).toEqual({ userInfo: false })
     expect(options.enabled).toBe(true)
 
     const sampler = options.tracesSampler
@@ -81,7 +81,8 @@ describe("init", () => {
     const options = sentryInit.mock.calls[0]?.[0] as NonNullable<Parameters<typeof Sentry.init>[0]> &
       Record<string, unknown>
 
-    expect(options.sendDefaultPii).toBe(true)
+    expect(options.dataCollection).toEqual({ httpBodies: [] })
+    expect(options.sendDefaultPii).toBeUndefined()
     expect(options.enableLogs).toBe(true)
     expect(options.profileLifecycle).toBe("trace")
     expect(options.release).toBe("revision")
@@ -92,6 +93,12 @@ describe("init", () => {
 
     const options = sentryInit.mock.calls[0]?.[0] as NonNullable<Parameters<typeof Sentry.init>[0]>
     expect(options.integrations).toEqual(["httpIntegration", "profilingIntegration", "pinoIntegration"])
+  })
+
+  it("disables incoming request body capture", () => {
+    init(baseConfig)
+
+    expect(vi.mocked(Sentry.httpIntegration)).toHaveBeenCalledWith({ maxIncomingRequestBodySize: "none" })
   })
 
   describe("tracesSampler", () => {
