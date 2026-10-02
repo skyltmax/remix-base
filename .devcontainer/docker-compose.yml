@@ -1,6 +1,6 @@
 services:
   app:
-    image: harbor.signmax.cloud/public/devcontainer:36
+    image: harbor.signmax.cloud/public/devcontainer:36@sha256:8d79c785c31dcc236d7f81dc974ec36acb0bc1b170d42f10469ae6ef854e5236
     volumes:
       - ..:/workspaces/remix-base:cached
     shm_size: "1gb"
