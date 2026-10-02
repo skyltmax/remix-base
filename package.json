@@ -131,8 +131,8 @@
   },
   "peerDependencies": {
     "@react-router/express": "^7.13.0",
-    "@sentry/profiling-node": "^10.0.0",
-    "@sentry/react-router": "^10.0.0",
+    "@sentry/profiling-node": "^10.57.0",
+    "@sentry/react-router": "^10.57.0",
     "express": "^5.0.0",
     "react-router": "^7.13.0"
   },

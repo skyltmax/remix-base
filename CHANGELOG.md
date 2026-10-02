@@ -8,6 +8,8 @@
   device keys or triggers `Set-Cookie`. Backported from 1.0.0.
 - fix: Stop attaching incoming request bodies to Sentry events.
 - ref: Replace the deprecated `sendDefaultPii: true` with `dataCollection`.
+- build: Raise the `@sentry/profiling-node` and `@sentry/react-router` peer ranges to `^10.57.0`, the first release that
+  documents `dataCollection`.
 
 ### [0.0.5] - 2026-08-13
 
