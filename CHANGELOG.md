@@ -2,6 +2,8 @@
 
 ### Unreleased
 
+### [1.0.1] - 2026-10-03
+
 - feat: Optional `skip` predicate on `deviceKeyMiddleware` plus an `isBotRequest` helper, so bot traffic no longer mints
   device keys or triggers `Set-Cookie`.
 - fix: Stop attaching incoming request bodies to Sentry events.

@@ -3,7 +3,7 @@
   "publishConfig": {
     "access": "public"
   },
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Server and shared utils for React Router 8 projects",
   "license": "MIT",
   "author": "Signmax AB <team@signomatic.ee> (https://skyltmax.se/)",
