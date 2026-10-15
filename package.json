@@ -133,8 +133,8 @@
   },
   "peerDependencies": {
     "@react-router/express": "^8.3.0",
-    "@sentry/profiling-node": "^10.70.0",
-    "@sentry/react-router": "^10.70.0",
+    "@sentry/profiling-node": "^10.70.0 || ^11.0.0",
+    "@sentry/react-router": "^10.70.0 || ^11.0.0",
     "express": "^5.2.1",
     "react-router": "^8.3.0"
   },
