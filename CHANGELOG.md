@@ -2,6 +2,13 @@
 
 ### Unreleased
 
+### [1.1.0] - 2026-11-09
+
+- feat: `serveApp` `preMiddleware` option, mounted after the request logger and before compression, static files and
+  cookie parsing, so a handler such as a reverse proxy can answer without the app's response processing.
+- feat: `expressLogger` merges `res.locals.log` into the "request completed" line.
+- feat: `init` `httpIntegration` option, merged into the default `Sentry.httpIntegration` options.
+
 ### [1.0.1] - 2026-10-03
 
 - feat: Optional `skip` predicate on `deviceKeyMiddleware` plus an `isBotRequest` helper, so bot traffic no longer mints
