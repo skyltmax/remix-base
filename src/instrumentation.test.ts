@@ -98,7 +98,18 @@ describe("init", () => {
   it("disables incoming request body capture", () => {
     init(baseConfig)
 
-    expect(vi.mocked(Sentry.httpIntegration)).toHaveBeenCalledWith({ maxIncomingRequestBodySize: "none" })
+    expect(vi.mocked(Sentry.httpIntegration)).toHaveBeenLastCalledWith({ maxIncomingRequestBodySize: "none" })
+  })
+
+  it("merges httpIntegration options into the default integration", () => {
+    const ignoreIncomingRequests = () => true
+    init({ ...baseConfig, httpIntegration: { ignoreIncomingRequests } })
+
+    expect(vi.mocked(Sentry.httpIntegration)).toHaveBeenLastCalledWith({
+      maxIncomingRequestBodySize: "none",
+      ignoreIncomingRequests,
+    })
+    expect(sentryInit.mock.calls[0]?.[0]).not.toHaveProperty("httpIntegration")
   })
 
   describe("tracesSampler", () => {

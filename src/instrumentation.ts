@@ -13,7 +13,15 @@ const defaultDenyUrls = [
   /\/site\.webmanifest/,
 ]
 
-export function init(config: Parameters<typeof Sentry.init>[0]) {
+type HttpIntegrationOptions = NonNullable<Parameters<typeof Sentry.httpIntegration>[0]>
+
+export type InitConfig = NonNullable<Parameters<typeof Sentry.init>[0]> & {
+  /** Merged into the default `Sentry.httpIntegration({ maxIncomingRequestBodySize: "none" })`, e.g. for
+   *  `ignoreIncomingRequests` or `ignoreOutgoingRequests`. Ignored when `integrations` is passed explicitly. */
+  httpIntegration?: HttpIntegrationOptions
+}
+
+export function init({ httpIntegration, ...config }: InitConfig) {
   const environment = config.environment ?? (process.env.NODE_ENV || "development")
   const tracesSampleRate = config?.tracesSampleRate ?? 1
 
@@ -35,7 +43,7 @@ export function init(config: Parameters<typeof Sentry.init>[0]) {
     integrations: [
       // Incoming request body capture is gated only by this option, not by `dataCollection.httpBodies`, and the
       // captured body is attached to every event including transactions (e.g. login POSTs).
-      Sentry.httpIntegration({ maxIncomingRequestBodySize: "none" }),
+      Sentry.httpIntegration({ maxIncomingRequestBodySize: "none", ...httpIntegration }),
       nodeProfilingIntegration(),
       Sentry.pinoIntegration(),
     ],

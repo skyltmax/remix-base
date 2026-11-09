@@ -31,6 +31,9 @@ const expressLoggerOpts: HttpLoggerOpts = {
     return id
   },
 
+  // Fields an app sets on `res.locals.log` before the response ends are merged into the "request completed" line.
+  customProps: (req, res) => (res as { locals?: { log?: Record<string, unknown> } }).locals?.log ?? {},
+
   autoLogging: {
     ignore(req) {
       return (

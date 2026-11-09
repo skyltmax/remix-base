@@ -62,6 +62,11 @@ Passing `middleware` replaces the defaults entirely, so spread `createDefaultMid
 when you still want them. `serveApp` always wires in the Sentry scope middleware, Pino request logger, compression,
 cookie parser, and a `/livez` health endpoint on top.
 
+`preMiddleware` handlers run right after the Pino request logger and before compression, static files, cookie parsing
+and `middleware`. Use it for handlers that must answer without the app's response processing, such as a reverse proxy
+that has to pass upstream responses through untouched. Requests keep their `X-Request-Id` and single access log line; a
+handler that calls `next()` falls through to the regular stack.
+
 In development, pass a Vite dev server (`devServer: viteServer.middlewares`) and call `startMetrics()` when you want a
 Prometheus endpoint.
 
@@ -160,6 +165,9 @@ logger.info("Application started")
 const metrics = await startMetrics({ port: 9394 })
 ```
 
+Fields set on `res.locals.log` before the response ends (e.g. `res.locals.log = { stack: "rails", upstream_ms: 12.3 }`)
+are merged into the request logger's "request completed" line.
+
 `startMetrics` spins up a dedicated Express app exposing `/metrics` and returns a handle so you can stop the server
 during shutdown.
 
@@ -206,6 +214,9 @@ The region falls back to `AWS_REGION` or `eu-central-1`.
     })
   }
   ```
+
+  Pass `httpIntegration` to merge options such as `ignoreIncomingRequests` or `ignoreOutgoingRequests` into the default
+  `Sentry.httpIntegration({ maxIncomingRequestBodySize: "none" })` without restating the other integrations.
 
   Every request is automatically enriched with a Sentry isolation scope (method, path, host, IP, referrer, user-agent,
   filtered query/body params, and response status) via the built-in `sentryScopeMiddleware`.

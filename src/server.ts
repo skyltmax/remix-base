@@ -17,6 +17,10 @@ import { sentryScopeMiddleware } from "./middleware/sentry_scope.js"
 
 export interface ServeAppOptions {
   devServer?: RequestHandler
+  /** Runs after the access logger and before compression, static files, cookie parsing and `middleware`. For handlers
+   *  that must answer without the app's response processing, such as a reverse proxy. A handler that calls `next()`
+   *  falls through to the regular stack. */
+  preMiddleware?: RequestHandler[]
   middleware?: RequestHandler[]
   getLoadContext?: GetLoadContextFunction
   port?: string | number
@@ -38,6 +42,7 @@ export async function serveApp(
   build: ServerBuild | (() => Promise<ServerBuild>),
   {
     devServer,
+    preMiddleware,
     middleware,
     getLoadContext,
     port = process.env.PORT || 4000,
@@ -76,6 +81,7 @@ export async function serveApp(
 
   app.disable("x-powered-by")
   app.use(expressLogger)
+  preMiddleware?.forEach(m => app.use(m))
   app.use(compression())
 
   app.get("/livez", (req, res) => {
