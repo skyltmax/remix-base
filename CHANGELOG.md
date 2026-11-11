@@ -23,6 +23,14 @@
   is a deprecated stub.
 - build: Run CI and the release workflow on Node 26; `engines.node` is `>=26.0.0`, and pnpm does not enforce the root
   `engines`, so CI on Node 24 would have passed below the declared floor.
+- chore(deps)!: Raise the `@sentry/react-router` and `@sentry/profiling-node` peer floors from `^10.70.0` to `^11.11.0`.
+  `init` drops the removed `enableLogs` option (the pino integration now enables logs on its own), passes
+  `maxRequestBodySize: "none"` (renamed from `maxIncomingRequestBodySize`; an `httpIntegration` override using the old
+  name no longer type-checks), and `tracesSampler` matches health checks on `attributes["url.path"]`, since v11 no
+  longer passes `request` and names `http.server` spans `GET` at sampling time. Consumer apps must follow the Sentry v11
+  migration guide for their own Sentry usage: spans are streamed by default, scope tags no longer reach spans,
+  `beforeSendTransaction`/`ignoreTransactions` are no-ops, `attachStacktrace` defaults to `true`, Express 5xx errors are
+  captured automatically, and the React Router Vite plugin moved to `@sentry/react-router/vite`.
 
 ### [1.1.0] - 2026-11-09
 

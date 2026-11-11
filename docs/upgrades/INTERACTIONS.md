@@ -77,17 +77,28 @@ polyfill wired through `setPolyfills` at module import for streaming — it is a
 the two together whenever both are open. Both are `optionalDependencies`: a break here degrades the GrowthBook feature
 for consumers that opt in, it does not break the server.
 
-## 4. Sentry is used through v10-era APIs on both sides of the request
+## 4. Sentry is used through v11-era APIs on both sides of the request
 
 `src/instrumentation.ts` configures `profileSessionSampleRate` + `profileLifecycle` and composes
-`Sentry.httpIntegration()`, `nodeProfilingIntegration()` and `Sentry.pinoIntegration()`;
+`Sentry.httpIntegration({ maxRequestBodySize })`, `nodeProfilingIntegration()` and `Sentry.pinoIntegration()`;
 `src/middleware/sentry_scope.ts` uses `getIsolationScope().setAttributes()/setTags()`; `src/router_context.ts` calls
 `Sentry.setUser`. A `@sentry/*` major typically renames or reshapes exactly these (integration factories, the profiling
 options, scope accessors), and `@sentry/react-router` additionally has to keep matching the React Router major in §1 —
 its framework-mode integration is what the peer pair is for.
 
-`@sentry/profiling-node` ships a native profiler (`@sentry-internal/node-cpu-profiler`) that must stay in the
-`allowBuilds` list (§8), and `@sentry/cli` runs a postinstall for the same reason.
+`@sentry/profiling-node` ships a native profiler (`@sentry/node-cpu-profiler`, `@sentry-internal/node-cpu-profiler`
+before v11) that must stay in the `allowBuilds` list (§8). v11 replaced `@sentry/cli`, which ran a postinstall, with the
+script-free `sentry` CLI package.
+
+Three v11 behaviours are not caught by `tsc` and shape this code:
+
+- `tracesSampler` runs before Express matches the route, so an `http.server` span is named just `GET` there; the sampler
+  matches on `attributes["url.path"]`, never on `name`. A name-based rule stops matching silently.
+- Spans are streamed and carry only attributes: scope tags no longer reach them, which is why `sentry_scope.ts` sets
+  every value as both tag and attribute. `beforeSendTransaction` and `ignoreTransactions` are no-ops.
+- With `maxRequestBodySize` unset, incoming body capture follows `dataCollection.httpBodies`, so the explicit `"none"`
+  is what keeps a caller-supplied `dataCollection` from turning body capture back on. `beforeSendLog` still receives the
+  raw pino `req` object, before attribute serialization.
 
 ## 5. @signmax/config owns lint, format and the TypeScript config — and its peer range is wider than what it tests
 
@@ -151,8 +162,10 @@ temporary `minimumReleaseAgeExclude` entry rather than lowering the global cutof
 ## 8. pnpm build-script allowlist
 
 `pnpm-workspace.yaml` carries `allowBuilds` — the allowlist of packages whose install scripts may run; pnpm fails the
-install otherwise. Current entries: `@sentry-internal/node-cpu-profiler`, `@sentry/cli`, `esbuild`, `msw`,
-`unrs-resolver`. A bump that introduces or renames a build-script dependency must update the allowlist in the same PR.
+install otherwise. Current entries: `@sentry/node-cpu-profiler` and `unrs-resolver`, the only packages in the tree with
+install scripts (Sentry 11 renamed the profiler and dropped `@sentry/cli`, msw 3 dropped its postinstall, and esbuild is
+no longer in the tree). A bump that introduces or renames a build-script dependency must update the allowlist in the
+same PR.
 
 Two traps: `unrs-resolver` arrives transitively through `@signmax/config`'s `eslint-plugin-import-x`, so it is not
 visible in our `package.json` at all; and pnpm 11 **removed** `onlyBuiltDependencies` (plus `onlyBuiltDependenciesFile`,

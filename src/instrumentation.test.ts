@@ -71,8 +71,8 @@ describe("init", () => {
     expect(options.enabled).toBe(true)
 
     const sampler = options.tracesSampler
-    expect(sampler?.({ request: { url: "/readyz" } } as never)).toBe(0)
-    expect(sampler?.({ request: { url: "/home" } } as never)).toBe(0.75)
+    expect(sampler?.({ attributes: { "url.path": "/readyz" } } as never)).toBe(0)
+    expect(sampler?.({ attributes: { "url.path": "/home" } } as never)).toBe(0.75)
   })
 
   it("sets default values", () => {
@@ -82,8 +82,7 @@ describe("init", () => {
       Record<string, unknown>
 
     expect(options.dataCollection).toEqual({ httpBodies: [] })
-    expect(options.sendDefaultPii).toBeUndefined()
-    expect(options.enableLogs).toBe(true)
+    expect(options).not.toHaveProperty("enableLogs")
     expect(options.profileLifecycle).toBe("trace")
     expect(options.release).toBe("revision")
   })
@@ -98,7 +97,7 @@ describe("init", () => {
   it("disables incoming request body capture", () => {
     init(baseConfig)
 
-    expect(vi.mocked(Sentry.httpIntegration)).toHaveBeenLastCalledWith({ maxIncomingRequestBodySize: "none" })
+    expect(vi.mocked(Sentry.httpIntegration)).toHaveBeenLastCalledWith({ maxRequestBodySize: "none" })
   })
 
   it("merges httpIntegration options into the default integration", () => {
@@ -106,42 +105,48 @@ describe("init", () => {
     init({ ...baseConfig, httpIntegration: { ignoreIncomingRequests } })
 
     expect(vi.mocked(Sentry.httpIntegration)).toHaveBeenLastCalledWith({
-      maxIncomingRequestBodySize: "none",
+      maxRequestBodySize: "none",
       ignoreIncomingRequests,
     })
     expect(sentryInit.mock.calls[0]?.[0]).not.toHaveProperty("httpIntegration")
   })
 
   describe("tracesSampler", () => {
+    it("matches on the url.path attribute, not the span name", () => {
+      init(baseConfig)
+      expect(getSampler()({ name: "GET", attributes: { "url.path": "/livez" } } as never)).toBe(0)
+      expect(getSampler()({ name: "GET /livez", attributes: {} } as never)).toBe(1)
+    })
+
     function getSampler() {
       const options = sentryInit.mock.calls[0]?.[0] as NonNullable<Parameters<typeof Sentry.init>[0]> &
         Record<string, unknown>
-      return options.tracesSampler as (ctx: { request?: { url?: string } }) => number
+      return options.tracesSampler as (ctx: { attributes: Record<string, unknown> }) => number
     }
 
     it("drops /readyz requests", () => {
       init(baseConfig)
-      expect(getSampler()({ request: { url: "/readyz" } })).toBe(0)
+      expect(getSampler()({ attributes: { "url.path": "/readyz" } })).toBe(0)
     })
 
     it("drops /livez requests", () => {
       init(baseConfig)
-      expect(getSampler()({ request: { url: "/livez" } })).toBe(0)
+      expect(getSampler()({ attributes: { "url.path": "/livez" } })).toBe(0)
     })
 
     it("drops /metrics requests", () => {
       init(baseConfig)
-      expect(getSampler()({ request: { url: "/metrics" } })).toBe(0)
+      expect(getSampler()({ attributes: { "url.path": "/metrics" } })).toBe(0)
     })
 
     it("uses default rate of 1 for other requests", () => {
       init(baseConfig)
-      expect(getSampler()({ request: { url: "/home" } })).toBe(1)
+      expect(getSampler()({ attributes: { "url.path": "/home" } })).toBe(1)
     })
 
     it("uses configured rate for other requests", () => {
       init({ ...baseConfig, tracesSampleRate: 0.5 })
-      expect(getSampler()({ request: { url: "/home" } })).toBe(0.5)
+      expect(getSampler()({ attributes: { "url.path": "/home" } })).toBe(0.5)
     })
   })
 

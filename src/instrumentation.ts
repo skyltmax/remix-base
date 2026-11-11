@@ -16,7 +16,7 @@ const defaultDenyUrls = [
 type HttpIntegrationOptions = NonNullable<Parameters<typeof Sentry.httpIntegration>[0]>
 
 export type InitConfig = NonNullable<Parameters<typeof Sentry.init>[0]> & {
-  /** Merged into the default `Sentry.httpIntegration({ maxIncomingRequestBodySize: "none" })`, e.g. for
+  /** Merged into the default `Sentry.httpIntegration({ maxRequestBodySize: "none" })`, e.g. for
    *  `ignoreIncomingRequests` or `ignoreOutgoingRequests`. Ignored when `integrations` is passed explicitly. */
   httpIntegration?: HttpIntegrationOptions
 }
@@ -33,17 +33,15 @@ export function init({ httpIntegration, ...config }: InitConfig) {
     tracesSampleRate: 1,
     profileSessionSampleRate: 0.1,
     profileLifecycle: "trace",
-    // Replaces the deprecated `sendDefaultPii: true`; setting `dataCollection` at all switches to the SDK defaults (user
-    // info, cookies, headers, query params on). No custom deny list needed: the SDK always filters keys matching its
-    // built-in sensitive snippets (auth, token, session, cookie, key, ...), which covers our session and device key
-    // cookies and the Authorization/Cookie headers. A caller-supplied `sendDefaultPii` is ignored once this is set.
+    // SDK defaults (user info, cookies, headers, query params on) minus bodies. No custom deny list needed: the SDK
+    // always filters keys matching its built-in sensitive snippets (auth, token, session, cookie, key, ...), which
+    // covers our session and device key cookies and the Authorization/Cookie headers.
     dataCollection: { httpBodies: [] },
     denyUrls: defaultDenyUrls,
-    enableLogs: true,
     integrations: [
-      // Incoming request body capture is gated only by this option, not by `dataCollection.httpBodies`, and the
-      // captured body is attached to every event including transactions (e.g. login POSTs).
-      Sentry.httpIntegration({ maxIncomingRequestBodySize: "none", ...httpIntegration }),
+      // Explicit so a caller-supplied `dataCollection` cannot turn incoming body capture back on: unset, the size is
+      // derived from `dataCollection.httpBodies`, and a captured body lands on every event and span (e.g. login POSTs).
+      Sentry.httpIntegration({ maxRequestBodySize: "none", ...httpIntegration }),
       nodeProfilingIntegration(),
       Sentry.pinoIntegration(),
     ],
@@ -68,8 +66,9 @@ export function init({ httpIntegration, ...config }: InitConfig) {
       return event
     },
     tracesSampler(samplingContext) {
-      const url = samplingContext.request?.url
-      if (url?.includes("/readyz") || url?.includes("/livez") || url?.includes("/metrics")) {
+      // Runs before the route is matched, so `http.server` spans are named just `GET` here; match on `url.path`.
+      const path = samplingContext.attributes["url.path"]
+      if (typeof path === "string" && ["/readyz", "/livez", "/metrics"].some(p => path.includes(p))) {
         return 0
       }
       return tracesSampleRate

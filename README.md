@@ -202,9 +202,10 @@ The region falls back to `AWS_REGION` or `eu-central-1`.
 
 ## Optional Integrations
 
-- **Sentry** – peer dependencies `@sentry/react-router` and `@sentry/profiling-node` must be installed. Call `init` from
-  your instrumentation entry (`--import ./instrument.mjs`) when `SENTRY_DSN` is set. The helper enables Sentry only in
-  `production`/`staging` environments, wires Pino + HTTP + profiling integrations, and filters health-check traffic.
+- **Sentry** – peer dependencies `@sentry/react-router` and `@sentry/profiling-node` (`^11.11.0`) must be installed.
+  Call `init` from your instrumentation entry (`--import ./instrument.mjs`) when `SENTRY_DSN` is set. The helper enables
+  Sentry only in `production`/`staging` environments, wires Pino + HTTP + profiling integrations, and filters
+  health-check traffic.
 
   ```typescript
   import { init } from "@signmax/remix-base/instrumentation"
@@ -219,10 +220,11 @@ The region falls back to `AWS_REGION` or `eu-central-1`.
   ```
 
   Pass `httpIntegration` to merge options such as `ignoreIncomingRequests` or `ignoreOutgoingRequests` into the default
-  `Sentry.httpIntegration({ maxIncomingRequestBodySize: "none" })` without restating the other integrations.
+  `Sentry.httpIntegration({ maxRequestBodySize: "none" })` without restating the other integrations.
 
   Every request is automatically enriched with a Sentry isolation scope (method, path, host, IP, referrer, user-agent,
-  filtered query/body params, and response status) via the built-in `sentryScopeMiddleware`.
+  filtered query/body params, and response status) via the built-in `sentryScopeMiddleware`. The values are set as both
+  tags (errors) and attributes (spans and logs), since Sentry 11 no longer copies scope tags onto streamed spans.
 
 - **GrowthBook** – install `@growthbook/growthbook` + `eventsource` and expose a scoped client through React Router's
   context.
