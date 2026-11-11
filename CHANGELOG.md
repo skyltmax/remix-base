@@ -11,6 +11,9 @@
   `trustCloudFrontIPs: true`.
 - build!: Raise the `react-router` and `@react-router/express` peer floors from `^8.3.0` to `^8.5.1`; consumers must be
   on React Router 8.5.1 or later.
+- build!: Raise the `express` peer floor from `^5.2.1` to `^5.3.0`, which brings `proxy-addr` 2.0.8 (CVE-2026-90711:
+  `req.ip` spoofing through a `trust proxy` subnet with zero leading bits, such as `::ffff:10.0.0.0/8`) and the `qs`
+  `arrayLimit`/`isBuffer` CVE fixes to consumers.
 
 ### [1.1.0] - 2026-11-09
 
