@@ -46,7 +46,7 @@ were identical across 7.18.2 → 8.3.0, and `GetLoadContextFunction` only droppe
 
 ## 2. The devcontainer image is built in skyltmax/infra; Renovate bumps the pin here
 
-`.devcontainer/docker-compose.yml` points at `harbor.signmax.cloud/public/devcontainer`, built in skyltmax/infra. The
+`.devcontainer/docker-compose.yml` points at `harbor.signmax.cloud/library/devcontainer`, built in skyltmax/infra. The
 tag is a bare build counter (`:35`) — the `rails-<upstream>` stack prefix was dropped at image 32 — so `renovate.json5`
 gives it regex versioning that maps the counter to `patch`, and `docker:pinDigests` adds the `@sha256:…` on top. Two
 things stay manual on an image PR:
@@ -59,7 +59,7 @@ things stay manual on an image PR:
 
 The version choice originates in infra: a stale image is fixed by an infra build, not a pin edit here. Anonymous tag
 listing against harbor is rejected, so a local dry-run always logs
-`Failed to look up docker package harbor.signmax.cloud/public/devcontainer: no-result` — expected locally, and no
+`Failed to look up docker package harbor.signmax.cloud/library/devcontainer: no-result` — expected locally, and no
 statement about the rule.
 
 ## 3. GrowthBook sticky bucketing rides per-version-verified SDK internals

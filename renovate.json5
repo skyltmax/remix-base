@@ -37,7 +37,7 @@
     // "no update" while new images keep publishing. The CHANGELOG_DISPLAYED_<N> marker in .devcontainer/boot.sh still
     // needs a manual commit on the PR (§2).
     {
-      matchPackageNames: ["harbor.signmax.cloud/public/devcontainer"],
+      matchPackageNames: ["harbor.signmax.cloud/library/devcontainer"],
       groupName: "harbor images",
       addLabels: ["cross-repo/infra"],
       versioning: "regex:^(?<patch>\\d+)$",
