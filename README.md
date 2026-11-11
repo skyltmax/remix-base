@@ -12,6 +12,8 @@ can ship React Router 8 projects without re-writing the same server glue.
 - Node `>=26.0.0`
 - Express `^5.3.0`
 
+Upgrading from 1.x: see the [2.0.0 upgrade guide](docs/migrations/2.0.0.md).
+
 ## Quick Start
 
 ```bash

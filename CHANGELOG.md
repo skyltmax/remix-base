@@ -2,35 +2,23 @@
 
 ### Unreleased
 
-- feat: `serveApp` `trustProxy` option, default `["loopback", "linklocal", "uniquelocal"]`, applied once at startup.
-  Production traffic now reaches Node through Bunny CDN and an in-cluster Envoy (TCP peer in `10.244.0.0/16`, a single
-  visitor entry in `X-Forwarded-For`), so the private-network list already yields the visitor for `req.ip` and the
-  Sentry user IP.
-- feat!: Remove `trustCloudFrontIPs` together with CloudFront IP fetching, its 12-hour refresh and the bundled
-  `cloudfront-ips` snapshots. Replace `trustCloudFrontIPs: false` with `trustProxy: false`, and drop
-  `trustCloudFrontIPs: true`.
-- chore(deps)!: Raise the `react-router` and `@react-router/express` peer floors from `^8.3.0` to `^8.5.1`; consumers
-  must be on React Router 8.5.1 or later.
-- chore(deps)!: Raise the `express` peer floor from `^5.2.1` to `^5.3.0`, which brings `proxy-addr` 2.0.8
-  (CVE-2026-90711: `req.ip` spoofing through a `trust proxy` subnet with zero leading bits, such as `::ffff:10.0.0.0/8`)
-  and the `qs` `arrayLimit`/`isBuffer` CVE fixes to consumers.
-- chore(deps): Upgrade `@signmax/config` to 4.0.0 (`eslint-plugin-jsx-a11y-x` replaces `eslint-plugin-jsx-a11y`,
-  clearing the last eslint 10 peer warning; `reset.d.ts` now carries the vendored ts-reset 0.7.0 overrides).
-- feat!: `test/helpers` targets msw 3. `gqlOpHandler`'s `handler` parameter is now msw 3's `HttpResponse<JsonBodyType>`
-  (msw 3 removed `StrictResponse`), and `msw` `^3.0.4` is declared as an optional peer dependency. Consumers using the
-  helpers must upgrade to msw 3; see the msw 3.0.0 release notes (`onUnhandledRequest` is now `onUnhandledFrame`).
-- chore(deps): Drop `@types/set-cookie-parser`; `set-cookie-parser` 3 ships its own types and the 3.x `@types` package
-  is a deprecated stub.
-- build: Run CI and the release workflow on Node 26; `engines.node` is `>=26.0.0`, and pnpm does not enforce the root
-  `engines`, so CI on Node 24 would have passed below the declared floor.
-- chore(deps)!: Raise the `@sentry/react-router` and `@sentry/profiling-node` peer floors from `^10.70.0` to `^11.11.0`.
-  `init` drops the removed `enableLogs` option (the pino integration now enables logs on its own), passes
-  `maxRequestBodySize: "none"` (renamed from `maxIncomingRequestBodySize`; an `httpIntegration` override using the old
-  name no longer type-checks), and `tracesSampler` matches health checks on `attributes["url.path"]`, since v11 no
-  longer passes `request` and names `http.server` spans `GET` at sampling time. Consumer apps must follow the Sentry v11
-  migration guide for their own Sentry usage: spans are streamed by default, scope tags no longer reach spans,
-  `beforeSendTransaction`/`ignoreTransactions` are no-ops, `attachStacktrace` defaults to `true`, Express 5xx errors are
-  captured automatically, and the React Router Vite plugin moved to `@sentry/react-router/vite`.
+Breaking release; see the [2.0.0 upgrade guide](docs/migrations/2.0.0.md).
+
+- feat!: Replace `trustCloudFrontIPs` and its CloudFront IP fetching with a static `trustProxy` option, default
+  `["loopback", "linklocal", "uniquelocal"]`. Production traffic reaches Node through Bunny CDN and an in-cluster Envoy
+  (TCP peer in `10.244.0.0/16`, a single visitor entry in `X-Forwarded-For`), so the private-network list yields the
+  visitor for `req.ip` and the Sentry user IP.
+- feat!: `test/helpers` targets msw 3: `gqlOpHandler` takes msw 3's `HttpResponse<JsonBodyType>`, and `msw` `^3.0.4` is
+  an optional peer dependency.
+- chore(deps)!: Upgrade Sentry to 11; the `@sentry/react-router` and `@sentry/profiling-node` peer floors move from
+  `^10.70.0` to `^11.11.0`. `init` absorbs the changes to its own options; apps migrate their own Sentry setup.
+- chore(deps)!: Raise the `react-router` and `@react-router/express` peer floors from `^8.3.0` to `^8.5.1`.
+- chore(deps)!: Raise the `express` peer floor from `^5.2.1` to `^5.3.0` for `proxy-addr` 2.0.8 (CVE-2026-90711) and the
+  `qs` 6.16 CVE fixes.
+- chore!: Require Node `>=26.0.0` (was `>=22.22.0`).
+- chore(deps): Upgrade `@signmax/config` to 4.0.0 and drop the stub `@types/set-cookie-parser`.
+- build: Run CI and the release workflow on Node 26; pnpm does not enforce the root `engines`, so CI on Node 24 would
+  have passed below the declared floor.
 
 ### [1.1.0] - 2026-11-09
 
