@@ -3,7 +3,7 @@ import { createRequestHandler, type GetLoadContextFunction } from "@react-router
 import * as Sentry from "@sentry/react-router"
 import chalk from "chalk"
 import closeWithGrace from "close-with-grace"
-import compression from "compression"
+import compression, { type CompressionOptions } from "compression"
 import cookieParser from "cookie-parser"
 import express, { type Express, type RequestHandler } from "express"
 import getPort from "get-port"
@@ -16,9 +16,9 @@ import { sentryScopeMiddleware } from "./middleware/sentry_scope.js"
 
 export interface ServeAppOptions {
   devServer?: RequestHandler
-  /** Runs after the access logger and before compression, static files, cookie parsing and `middleware`. For handlers
-   *  that must answer without the app's response processing, such as a reverse proxy. A handler that calls `next()`
-   *  falls through to the regular stack. */
+  /** Runs after the access logger and before compression (when enabled), static files, cookie parsing and `middleware`.
+   *  For handlers that must answer without the app's response processing, such as a reverse proxy. A handler that calls
+   *  `next()` falls through to the regular stack. */
   preMiddleware?: RequestHandler[]
   middleware?: RequestHandler[]
   getLoadContext?: GetLoadContextFunction
@@ -28,6 +28,9 @@ export interface ServeAppOptions {
   /** Express `trust proxy` value, applied once at startup. Defaults to `["loopback", "linklocal", "uniquelocal"]`;
    *  `false` leaves proxy trust off. */
   trustProxy?: string[] | false
+  /** Compress responses with the `compression` middleware. Default `false`; pass `true`, or an options object to tune
+   *  it, when no proxy in front compresses. */
+  compression?: boolean | CompressionOptions
 }
 
 const DEFAULT_TRUST_PROXY = ["loopback", "linklocal", "uniquelocal"]
@@ -52,6 +55,7 @@ export async function serveApp(
     buildDir,
     assetsDir,
     trustProxy = [...DEFAULT_TRUST_PROXY],
+    compression: compressionOption = false,
   }: ServeAppOptions
 ): Promise<ServeAppHandle> {
   const app = express()
@@ -63,7 +67,9 @@ export async function serveApp(
   app.disable("x-powered-by")
   app.use(expressLogger)
   preMiddleware?.forEach(m => app.use(m))
-  app.use(compression())
+  if (compressionOption !== false) {
+    app.use(compression(compressionOption === true ? undefined : compressionOption))
+  }
 
   app.get("/livez", (req, res) => {
     res.status(200).send("HI")

@@ -1,9 +1,13 @@
 # Change Log
 
-### Unreleased
+### [2.0.0] - Unreleased
 
-Breaking release; see the [2.0.0 upgrade guide](docs/migrations/2.0.0.md).
+Breaking release; see the [2.0.0 upgrade guide](docs/migrations/2.0.0.md). Includes the never-published 1.1.0.
 
+- feat!: **BREAKING:** `serveApp` no longer compresses responses by default; pass `compression: true` (or `compression`
+  options) to keep the 1.x behaviour. Our apps run behind a proxy that compresses (Envoy in the clusters, Caddy in the
+  devcontainers). `@types/compression` moves to `dependencies`, since `ServeAppOptions` now exposes its
+  `CompressionOptions`.
 - feat!: Replace `trustCloudFrontIPs` and its CloudFront IP fetching with a static `trustProxy` option, default
   `["loopback", "linklocal", "uniquelocal"]`. Production traffic reaches Node through Bunny CDN and an in-cluster Envoy
   (TCP peer in `10.244.0.0/16`, a single visitor entry in `X-Forwarded-For`), so the private-network list yields the
@@ -23,11 +27,9 @@ Breaking release; see the [2.0.0 upgrade guide](docs/migrations/2.0.0.md).
 - chore(deps): Upgrade `@signmax/config` to 4.0.0 and drop the stub `@types/set-cookie-parser`.
 - build: Run CI and the release workflow on Node 26; pnpm does not enforce the root `engines`, so CI on Node 24 would
   have passed below the declared floor.
-
-### [1.1.0] - 2026-11-09
-
-- feat: `serveApp` `preMiddleware` option, mounted after the request logger and before compression, static files and
-  cookie parsing, so a handler such as a reverse proxy can answer without the app's response processing.
+- feat: `serveApp` `preMiddleware` option, mounted after the request logger and before compression (when enabled),
+  static files and cookie parsing, so a handler such as a reverse proxy can answer without the app's response
+  processing.
 - feat: `expressLogger` merges `res.locals.log` into the "request completed" line.
 - feat: `init` `httpIntegration` option, merged into the default `Sentry.httpIntegration` options.
 

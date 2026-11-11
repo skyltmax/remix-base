@@ -97,7 +97,6 @@
   "prettier": "@signmax/config/prettier",
   "devDependencies": {
     "@signmax/config": "4.0.0",
-    "@types/compression": "1.8.1",
     "@types/cookie-parser": "1.4.10",
     "@types/express": "5.0.6",
     "@types/node": "26.6.6",
@@ -116,6 +115,7 @@
     "@aws-sdk/client-secrets-manager": "^3.1164.0",
     "@nichtsam/helmet": "^0.3.3",
     "@tusbar/cache-control": "^3.0.1",
+    "@types/compression": "^1.8.1",
     "chalk": "^6.0.1",
     "close-with-grace": "^2.5.0",
     "compression": "^1.8.2",

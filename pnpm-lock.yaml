@@ -184,6 +184,9 @@ importers:
       '@tusbar/cache-control':
         specifier: ^3.0.1
         version: 3.0.1
+      '@types/compression':
+        specifier: ^1.8.1
+        version: 1.8.1
       chalk:
         specifier: ^6.0.1
         version: 6.0.1
@@ -233,9 +236,6 @@ importers:
       '@signmax/config':
         specifier: 4.0.0
         version: 4.0.0(@typescript-eslint/eslint-plugin@8.72.1(@typescript-eslint/parser@8.72.1(eslint@10.14.0(supports-color@8.1.1))(supports-color@8.1.1)(typescript@6.0.3))(eslint@10.14.0(supports-color@8.1.1))(supports-color@8.1.1)(typescript@6.0.3))(@typescript-eslint/utils@8.72.1(eslint@10.14.0(supports-color@8.1.1))(supports-color@8.1.1)(typescript@6.0.3))(eslint@10.14.0(supports-color@8.1.1))(prettier@3.9.10)(supports-color@8.1.1)(typescript@6.0.3)(vitest@5.1.0)
-      '@types/compression':
-        specifier: 1.8.1
-        version: 1.8.1
       '@types/cookie-parser':
         specifier: 1.4.10
         version: 1.4.10(@types/express@5.0.6)

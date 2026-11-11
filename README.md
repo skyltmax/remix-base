@@ -12,7 +12,12 @@ can ship React Router 8 projects without re-writing the same server glue.
 - Node `>=26.0.0`
 - Express `^5.3.0`
 
-Upgrading from 1.x: see the [2.0.0 upgrade guide](docs/migrations/2.0.0.md).
+### Upgrading to 2.0
+
+2.0 changes defaults and raises the minimum versions above: `serveApp` no longer compresses responses (pass
+`compression: true` to keep the 1.x behaviour), and proxy trust is a static private-network list instead of fetched
+CloudFront ranges. See the [2.0.0 upgrade guide](docs/migrations/2.0.0.md) for every change and how to check which ones
+affect your app.
 
 ## Quick Start
 
@@ -60,13 +65,22 @@ await serveApp(build, options)
 ```
 
 Passing `middleware` replaces the defaults entirely, so spread `createDefaultMiddleware()` (trailing slash, Helmet, CSP)
-when you still want them. `serveApp` always wires in the Sentry scope middleware, Pino request logger, compression,
-cookie parser, and a `/livez` health endpoint on top.
+when you still want them. `serveApp` always wires in the Sentry scope middleware, Pino request logger, cookie parser,
+and a `/livez` health endpoint on top.
 
-`preMiddleware` handlers run right after the Pino request logger and before compression, static files, cookie parsing
-and `middleware`. Use it for handlers that must answer without the app's response processing, such as a reverse proxy
-that has to pass upstream responses through untouched. Requests keep their `X-Request-Id` and single access log line; a
-handler that calls `next()` falls through to the regular stack.
+Responses are not compressed by default, on the assumption that a proxy in front (Envoy, Caddy, a CDN) does it. Pass
+`compression: true` when nothing in front compresses, or an options object for the
+[`compression`](https://github.com/expressjs/compression#options) middleware to tune it:
+
+```typescript
+await serveApp(build, { compression: true })
+await serveApp(build, { compression: { threshold: "4kb" } })
+```
+
+`preMiddleware` handlers run right after the Pino request logger and before compression (when enabled), static files,
+cookie parsing and `middleware`. Use it for handlers that must answer without the app's response processing, such as a
+reverse proxy that has to pass upstream responses through untouched. Requests keep their `X-Request-Id` and single
+access log line; a handler that calls `next()` falls through to the regular stack.
 
 `trustProxy` sets Express's `trust proxy` once at startup and defaults to `["loopback", "linklocal", "uniquelocal"]`, so
 `req.ip` and `req.protocol` come from `X-Forwarded-*` when the TCP peer is a private-network proxy such as an in-cluster

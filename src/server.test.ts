@@ -38,8 +38,30 @@ describe("serveApp", () => {
   const direct = { ip: expect.stringMatching(/^(::ffff:)?127\.0\.0\.1$/), protocol: "http" }
   const visitor = { ip: "203.0.113.7", protocol: "https" }
 
+  describe("compression", () => {
+    it("does not compress by default", async () => {
+      const get = await start({ middleware: [answerHtml] })
+
+      const res = await get("/", { "Accept-Encoding": "gzip, br" })
+
+      expect(res.status).toBe(200)
+      expect(res.headers.get("content-encoding")).toBeNull()
+      expect(res.headers.get("vary")).toBeNull()
+      expect(await res.text()).toBe(html)
+    })
+
+    it("passes an options object to the middleware", async () => {
+      const get = await start({ compression: { threshold: html.length + 1 }, middleware: [answerHtml] })
+
+      const res = await get("/", { "Accept-Encoding": "gzip, br" })
+
+      expect(res.headers.get("content-encoding")).toBeNull()
+      expect(await res.text()).toBe(html)
+    })
+  })
+
   it("runs preMiddleware before compression", async () => {
-    const get = await start({ preMiddleware: [answerHtml] })
+    const get = await start({ compression: true, preMiddleware: [answerHtml] })
 
     const res = await get("/")
 
@@ -50,7 +72,7 @@ describe("serveApp", () => {
   })
 
   it("runs middleware after compression", async () => {
-    const get = await start({ middleware: [answerHtml] })
+    const get = await start({ compression: true, middleware: [answerHtml] })
 
     const res = await get("/")
 
@@ -62,6 +84,7 @@ describe("serveApp", () => {
   it("falls through to the regular stack when preMiddleware calls next()", async () => {
     const seen: string[] = []
     const get = await start({
+      compression: true,
       preMiddleware: [
         (req, res, next) => {
           seen.push(req.path)
