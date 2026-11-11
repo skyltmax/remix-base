@@ -7,7 +7,7 @@ can ship React Router 8 projects without re-writing the same server glue.
 
 ## Requirements
 
-- React Router `^8.0.0` (`react-router` and `@react-router/express`) — middleware and `RouterContextProvider` are
+- React Router `^8.5.1` (`react-router` and `@react-router/express`) — middleware and `RouterContextProvider` are
   unconditional in v8, so no future flags are needed
 - Node `>=22.22.0`, the floor React Router 8 sets
 - Express `^5.0.0`
@@ -29,7 +29,7 @@ await serveApp(build, {})
 
 ## What You Get
 
-- Express 5 server with sensible defaults and CloudFront-aware proxy trust
+- Express 5 server with sensible defaults and private-network proxy trust
 - Middleware bundle (Helmet, CSP, no-index, trailing slash guard) plus optional device-key helper
 - Built-in Sentry scope middleware that enriches every request with filtered params, tags, and user IP
 - Structured logging via Pino and Prometheus metrics endpoint
@@ -52,7 +52,6 @@ const build = async () => import("../build/server/index.js")
 const options: ServeAppOptions = {
   middleware: [...createDefaultMiddleware(), requestMiddleware(), deviceKeyMiddleware({ cookieName: "device_id" })],
   getLoadContext: (req, res) => getServerContext(req, res),
-  trustCloudFrontIPs: true,
 }
 
 await serveApp(build, options)
@@ -66,6 +65,10 @@ cookie parser, and a `/livez` health endpoint on top.
 and `middleware`. Use it for handlers that must answer without the app's response processing, such as a reverse proxy
 that has to pass upstream responses through untouched. Requests keep their `X-Request-Id` and single access log line; a
 handler that calls `next()` falls through to the regular stack.
+
+`trustProxy` sets Express's `trust proxy` once at startup and defaults to `["loopback", "linklocal", "uniquelocal"]`, so
+`req.ip` and `req.protocol` come from `X-Forwarded-*` when the TCP peer is a private-network proxy such as an in-cluster
+Envoy. Pass `false` to ignore those headers.
 
 In development, pass a Vite dev server (`devServer: viteServer.middlewares`) and call `startMetrics()` when you want a
 Prometheus endpoint.

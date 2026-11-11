@@ -25,10 +25,18 @@ describe("serveApp", () => {
     const port = await getPort()
     // get-port locks the ports it returns, so serveApp's own availability check would otherwise reject this one.
     clearLockedPorts()
-    handle = await serveApp(build, { trustCloudFrontIPs: false, port, ...options })
-    return (path: string) =>
-      fetch(`http://127.0.0.1:${handle!.port}${path}`, { headers: { "Accept-Encoding": "gzip" } })
+    handle = await serveApp(build, { trustProxy: false, port, ...options })
+    return (path: string, headers: Record<string, string> = {}) =>
+      fetch(`http://127.0.0.1:${handle!.port}${path}`, { headers: { "Accept-Encoding": "gzip", ...headers } })
   }
+
+  const echoClient: RequestHandler = (req, res) => {
+    res.json({ ip: req.ip, protocol: req.protocol })
+  }
+
+  const forwarded = { "X-Forwarded-For": "203.0.113.7", "X-Forwarded-Proto": "https" }
+  const direct = { ip: expect.stringMatching(/^(::ffff:)?127\.0\.0\.1$/), protocol: "http" }
+  const visitor = { ip: "203.0.113.7", protocol: "https" }
 
   it("runs preMiddleware before compression", async () => {
     const get = await start({ preMiddleware: [answerHtml] })
@@ -76,5 +84,31 @@ describe("serveApp", () => {
     const res = await get("/")
 
     expect(res.headers.get("x-request-id")).toMatch(/^[0-9a-f-]{36}$/)
+  })
+
+  describe("proxy trust", () => {
+    it("trusts loopback, link-local and unique-local proxies by default", async () => {
+      const get = await start({ trustProxy: undefined, preMiddleware: [echoClient] })
+
+      const res = await get("/", forwarded)
+
+      expect(await res.json()).toEqual(visitor)
+    })
+
+    it("ignores forwarding headers with trustProxy: false", async () => {
+      const get = await start({ trustProxy: false, preMiddleware: [echoClient] })
+
+      const res = await get("/", forwarded)
+
+      expect(await res.json()).toEqual(direct)
+    })
+
+    it("applies a custom trustProxy list", async () => {
+      const get = await start({ trustProxy: ["uniquelocal"], preMiddleware: [echoClient] })
+
+      const res = await get("/", forwarded)
+
+      expect(await res.json()).toEqual(direct)
+    })
   })
 })

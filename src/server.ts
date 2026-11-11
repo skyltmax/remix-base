@@ -8,7 +8,6 @@ import cookieParser from "cookie-parser"
 import express, { type Express, type RequestHandler } from "express"
 import getPort from "get-port"
 import { type ServerBuild } from "react-router"
-import { CloudfrontIpUpdater } from "./cloudfront-ips/updater.js"
 import logger, { expressLogger } from "./logger.js"
 import { cspMiddleware } from "./middleware/csp.js"
 import { endingSlashMiddleware } from "./middleware/ending_slash.js"
@@ -26,8 +25,12 @@ export interface ServeAppOptions {
   port?: string | number
   buildDir?: string
   assetsDir?: string
-  trustCloudFrontIPs?: boolean
+  /** Express `trust proxy` value, applied once at startup. Defaults to `["loopback", "linklocal", "uniquelocal"]`;
+   *  `false` leaves proxy trust off. */
+  trustProxy?: string[] | false
 }
+
+const DEFAULT_TRUST_PROXY = ["loopback", "linklocal", "uniquelocal"]
 
 export interface ServeAppHandle {
   app: Express
@@ -48,35 +51,13 @@ export async function serveApp(
     port = process.env.PORT || 4000,
     buildDir,
     assetsDir,
-    trustCloudFrontIPs = true,
+    trustProxy = [...DEFAULT_TRUST_PROXY],
   }: ServeAppOptions
 ): Promise<ServeAppHandle> {
   const app = express()
-  let cloudfrontUpdaterInterval: NodeJS.Timeout | undefined
 
-  if (trustCloudFrontIPs) {
-    const ipUpdater = new CloudfrontIpUpdater(logger)
-    try {
-      await ipUpdater.updateTrustProxy(app)
-    } catch (error) {
-      Sentry.captureException(error)
-      logger.error(error, "Failed to refresh CloudFront trust proxy ranges")
-    }
-
-    // update the IP ranges every 12 hours
-    cloudfrontUpdaterInterval = setInterval(
-      async () => {
-        try {
-          await ipUpdater.updateTrustProxy(app)
-        } catch (error) {
-          Sentry.captureException(error)
-          logger.error(error, "Failed to refresh CloudFront trust proxy ranges")
-        }
-      },
-      1000 * 60 * 60 * 12
-    )
-
-    cloudfrontUpdaterInterval.unref?.()
+  if (trustProxy !== false) {
+    app.set("trust proxy", trustProxy)
   }
 
   app.disable("x-powered-by")
@@ -119,17 +100,11 @@ export async function serveApp(
 
   const desiredPort = Number(port)
   if (Number.isNaN(desiredPort)) {
-    if (cloudfrontUpdaterInterval) {
-      clearInterval(cloudfrontUpdaterInterval)
-    }
     throw new Error(`Invalid port value: ${String(port)}`)
   }
   const portToUse = await getPort({ port: desiredPort })
   const portAvailable = desiredPort === portToUse
   if (!portAvailable) {
-    if (cloudfrontUpdaterInterval) {
-      clearInterval(cloudfrontUpdaterInterval)
-    }
     throw new Error(`Port ${desiredPort} is not available`)
   }
 
@@ -144,9 +119,6 @@ export async function serveApp(
       return
     }
     isClosed = true
-    if (cloudfrontUpdaterInterval) {
-      clearInterval(cloudfrontUpdaterInterval)
-    }
     await new Promise((resolve, reject) => {
       server.close(e => (e ? reject(e) : resolve("ok")))
     })

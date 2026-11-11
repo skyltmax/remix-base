@@ -32,7 +32,7 @@ So a React Router major is briefed **twice**, and the two PRs are not the same r
    (`pnpm update react-router @react-router/express`) so CI proves the new one;
 2. the narrow — hand-edit the range to the new major alone. Renovate never opens this PR.
 
-Current policy: **this package tracks a single React Router major.** The range is `^8.0.0`, narrowed by hand in the v8
+Current policy: **this package tracks a single React Router major.** The range is `^8.5.1`, narrowed by hand in the v8
 upgrade after a widen sat unvalidated on `main`. Narrowing invalidates the stale entries, so a plain `pnpm install`
 re-resolves — no `pnpm update` needed. `engines.node` (`>=22.22.0`) now mirrors the floor React Router 8 declares, and
 must move with any future major (§9).
@@ -139,7 +139,7 @@ lockfile PR can pull a transitive published hours ago. The policy is therefore e
 - `trustLockfile: true` skips re-verification of committed entries on install, because entries resolved before this
   policy can be younger than the cutoff. Caveat worth knowing in a public repo: it also means a lockfile authored in a
   fork PR is installed by CI without that re-check;
-- `packageManager: "pnpm@11.22.0"` in `package.json` pins the resolver so CI, the devcontainer and Renovate's worker all
+- `packageManager: "pnpm@12.18.0"` in `package.json` pins the resolver so CI, the devcontainer and Renovate's worker all
   apply the same policy. `pnpm/action-setup` reads that field — the workflows deliberately pass no `version:` input, and
   the action errors when both are given and disagree. Renovate tracks the field as an ordinary npm dep (verified: it
   produces a `renovate/pnpm-11.x` branch).
@@ -205,12 +205,5 @@ and the `Logger` type re-exported in `src/router_context.ts`.
 `src/server.ts` mounts the React Router handler on `app.all("*splat", …)` — Express 5 named-wildcard syntax that is
 invalid in Express 4 and could move again in Express 6. Also Express-5-specific: `res.appendHeader` in
 `src/api/client.ts`, `req.hostname` throwing on a malformed Host header (wrapped in try/catch in
-`src/middleware/sentry_scope.ts`), and the `trust proxy` array assembled in `src/cloudfront-ips/updater.ts`. An
-`express` major is a peer-range change (§1) **and** a code change here.
-
-## 14. The CloudFront IP snapshots are tracked by nothing
-
-`src/cloudfront-ips/{backup,vpc}.json` are hand-maintained snapshots copied into `dist/` by the build script (they are
-data, not dependencies — no manager sees them). `backup.json` is only the bootstrap list until the first live fetch from
-`ip-ranges.amazonaws.com` succeeds, so staleness degrades the trust-proxy list for the first moments of a process rather
-than breaking it. Refresh it deliberately; no Renovate PR will ever remind you.
+`src/middleware/sentry_scope.ts`), and the `trust proxy` value applied in `src/server.ts`. An `express` major is a
+peer-range change (§1) **and** a code change here.

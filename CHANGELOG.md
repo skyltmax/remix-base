@@ -2,6 +2,16 @@
 
 ### Unreleased
 
+- feat: `serveApp` `trustProxy` option, default `["loopback", "linklocal", "uniquelocal"]`, applied once at startup.
+  Production traffic now reaches Node through Bunny CDN and an in-cluster Envoy (TCP peer in `10.244.0.0/16`, a single
+  visitor entry in `X-Forwarded-For`), so the private-network list already yields the visitor for `req.ip` and the
+  Sentry user IP.
+- feat!: Remove `trustCloudFrontIPs` together with CloudFront IP fetching, its 12-hour refresh and the bundled
+  `cloudfront-ips` snapshots. Replace `trustCloudFrontIPs: false` with `trustProxy: false`, and drop
+  `trustCloudFrontIPs: true`.
+- build!: Raise the `react-router` and `@react-router/express` peer floors from `^8.3.0` to `^8.5.1`; consumers must be
+  on React Router 8.5.1 or later.
+
 ### [1.1.0] - 2026-11-09
 
 - feat: `serveApp` `preMiddleware` option, mounted after the request logger and before compression, static files and
