@@ -6,7 +6,7 @@ import {
 } from "@growthbook/growthbook"
 import httpMocks from "node-mocks-http"
 import { describe, it, expect, vi, beforeEach } from "vitest"
-import { createScopedGrowthBook, refreshStickyBuckets } from "./growthbook.js"
+import { createGrowthBook, createScopedGrowthBook, refreshStickyBuckets } from "./growthbook.js"
 import logger from "./logger.js"
 
 // Mock the logger
@@ -215,5 +215,29 @@ describe("refreshStickyBuckets", () => {
     await refreshStickyBuckets(gbInstance, client, service)
 
     expect(getAllAssignments).not.toHaveBeenCalled()
+  })
+})
+
+describe("createGrowthBook", () => {
+  // Port 1 refuses the connection at once, so init() settles without a payload instead of waiting on a real host.
+  const config = { apiHost: "http://127.0.0.1:1", clientKey: "sdk-test", timeout: 50, streaming: false }
+
+  beforeEach(() => {
+    vi.mocked(logger.info).mockClear()
+  })
+
+  it("keeps debug logging off by default", async () => {
+    const client = await createGrowthBook(config)
+
+    expect(client.debug).toBe(false)
+    client.log("Type mismatch in condition", { path: "adminId" })
+    expect(logger.info).not.toHaveBeenCalled()
+  })
+
+  it("routes debug logs to the logger with the context as a field", async () => {
+    const client = await createGrowthBook({ ...config, debug: true })
+
+    client.log("Type mismatch in condition", { path: "adminId" })
+    expect(logger.info).toHaveBeenCalledWith({ growthbook: { path: "adminId" } }, "Type mismatch in condition")
   })
 })

@@ -266,6 +266,10 @@ The region falls back to `AWS_REGION` or `eu-central-1`.
   `refreshStickyBuckets(gbInstance, growthbook, stickyBucketService)` after `updateAttributes` to load the assignments
   keyed on the new attributes.
 
+  GrowthBook 2 matches targeting conditions only when the attribute has the type the rule uses: `"5"` no longer matches
+  `5`, `1` no longer matches `true`, and a missing attribute no longer counts as `0`. Pass `debug: true` to
+  `createGrowthBook` to log each `Type mismatch in condition` through the Pino logger.
+
 ## Environment Variables
 
 - `NODE_ENV` – sets development/production mode

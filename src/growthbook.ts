@@ -22,13 +22,17 @@ export interface GrowthBookConfig {
   clientKey: string
   timeout?: number
   streaming?: boolean
+  /** Logs condition evaluation, including `Type mismatch in condition` for attributes sent with a type the targeting
+   *  rule does not use (GrowthBook 2.0 no longer converts between strings, numbers and booleans). */
+  debug?: boolean
 }
 
 export const createGrowthBook = async (config: GrowthBookConfig) => {
   const growthbook = new GrowthBookClient({
     apiHost: config.apiHost,
     clientKey: config.clientKey,
-    log: logger.info,
+    debug: config.debug ?? false,
+    log: (msg, ctx) => logger.info({ growthbook: ctx }, msg),
   })
 
   await growthbook.init({

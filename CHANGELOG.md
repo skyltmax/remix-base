@@ -15,6 +15,10 @@ Breaking release; see the [2.0.0 upgrade guide](docs/migrations/2.0.0.md).
 - chore(deps)!: Raise the `react-router` and `@react-router/express` peer floors from `^8.3.0` to `^8.5.1`.
 - chore(deps)!: Raise the `express` peer floor from `^5.2.1` to `^5.3.0` for `proxy-addr` 2.0.8 (CVE-2026-90711) and the
   `qs` 6.16 CVE fixes.
+- chore(deps)!: Upgrade `@growthbook/growthbook` from `^1.7.0` to `^2.0.0`. Targeting conditions are type-strict, so
+  attributes sent with a type the rule does not use stop matching.
+- feat: `createGrowthBook` `debug` option, which logs condition evaluation (including type mismatches) through the Pino
+  logger. Fixes the `log` callback, which passed `logger.info` unbound and threw on the first debug log.
 - chore!: Require Node `>=26.0.0` (was `>=22.22.0`).
 - chore(deps): Upgrade `@signmax/config` to 4.0.0 and drop the stub `@types/set-cookie-parser`.
 - build: Run CI and the release workflow on Node 26; pnpm does not enforce the root `engines`, so CI on Node 24 would

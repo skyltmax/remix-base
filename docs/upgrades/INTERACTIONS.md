@@ -68,8 +68,18 @@ statement about the rule.
 `src/growthbook.ts` depends on `@growthbook/growthbook` behaviour that is not part of the documented API surface:
 `applyStickyBuckets` returning `{ stickyBucketAssignmentDocs, saveStickyBucketAssignmentDoc }`, `getUserContext()`
 returning the live mutable context reference, and evaluation gating sticky bucketing on the presence of
-`saveStickyBucketAssignmentDoc` on the user context (verified again against 1.6.5's `dist/esm/core.mjs`).
-`createScopedInstance` and `setForcedFeatures` are the other seams.
+`saveStickyBucketAssignmentDoc` on the user context (verified again against 2.0.0's `dist/esm/core.mjs` and
+`GrowthBookClient.mjs`; 2.0.0 only changed the transpiled form of `applyStickyBuckets`). `createScopedInstance` and
+`setForcedFeatures` are the other seams.
+
+The SDK calls the `log` option only when `debug` is on, so a broken logger stays invisible until someone enables it:
+`createGrowthBook` passed pino's `logger.info` unbound until this package's 2.0.0, which throws on the first call. Keep
+it a closure.
+
+`@growthbook/growthbook` is an optional _dependency_, not a peer, so its version reaches consumers through our range
+alone. A major that changes evaluation semantics (2.0 made condition operators type-strict) changes which users match
+which rules in every consumer at their next catalog bump, with no code change on their side: treat it as breaking in the
+CHANGELOG and the upgrade guide.
 
 On ANY `@growthbook/growthbook` bump: re-verify those facts in the new version's `dist/esm/core.mjs` /
 `GrowthBookClient.mjs` and lean on `src/growthbook.test.ts`, which exercises exactly these seams. `eventsource` is the
