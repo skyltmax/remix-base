@@ -64,7 +64,9 @@ this tree, minus the github-actions and harbor lookups a local run cannot perfor
   `renovate/chalk-6.x`, `renovate/tusbar-cache-control-3.x`, `renovate/eventsource-5.x` (§3).
 - **Abandonment flags** (`abandonments:recommended`, no release in a year) — the dry-run reported exactly: `npm-run-all`
   (the replacement PR is the fix), `prom-client`, `cookie-parser`, `compression`, `tslib`. A prompt to check, not a
-  verdict — and `tslib` is currently unused here, since nothing sets `importHelpers`.
+  verdict. Resolved in 2.0.0: `prom-client` was deprecated in favour of `@prometheus-io/client` and replaced, and the
+  unused `tslib` (nothing sets `importHelpers`) was removed. `cookie-parser` and `pino-http` stay: both are finished,
+  org-maintained packages that are flagged only for release age.
 
 ## The gate: brief every PR before merging
 

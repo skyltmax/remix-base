@@ -1,16 +1,16 @@
 import type { Server } from "node:http"
-import * as Sentry from "@sentry/react-router"
-import chalk from "chalk"
-import closeWithGrace from "close-with-grace"
-import express, { type Express } from "express"
-import getPort from "get-port"
 import {
   collectDefaultMetrics,
   register as defaultRegistry,
   type DefaultMetricsCollectorConfiguration,
   type Registry as PromRegistry,
   type RegistryContentType,
-} from "prom-client"
+} from "@prometheus-io/client"
+import * as Sentry from "@sentry/react-router"
+import chalk from "chalk"
+import closeWithGrace from "close-with-grace"
+import express, { type Express } from "express"
+import getPort from "get-port"
 import logger, { expressLogger } from "./logger.js"
 
 export interface MetricsServerHandle {

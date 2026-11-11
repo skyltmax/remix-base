@@ -5,10 +5,10 @@ Renovate PR against this file; when an upgrade goes sideways for a reason not li
 
 ## 1. peerDependencies are the consumer contract
 
-`react-router`, `@react-router/express`, `express`, `@sentry/react-router`, `@sentry/profiling-node` and the optional
-`msw` (§11) are `peerDependencies`: their ranges define what every consumer (the monorepo BFFs) must satisfy. Renovate
-widens peer ranges instead of bumping them, so an in-range minor raises no PR — it arrives only through
-`lockFileMaintenance` — and a major surfaces as a widen (`^7.13.0` → `^7.13.0 || ^8.0.0`).
+`react-router`, `@react-router/express`, `express`, `@sentry/react-router`, `@sentry/profiling-node`,
+`@prometheus-io/client` and the optional `msw` (§11) are `peerDependencies`: their ranges define what every consumer
+(the monorepo BFFs) must satisfy. Renovate widens peer ranges instead of bumping them, so an in-range minor raises no PR
+— it arrives only through `lockFileMaintenance` — and a major surfaces as a widen (`^7.13.0` → `^7.13.0 || ^8.0.0`).
 
 **Raising a floor or narrowing a range is a breaking change of this package**, never routine maintenance: it forces
 every consumer to upgrade in lockstep with a catalog bump. `react-router` and `@react-router/express` ride the same

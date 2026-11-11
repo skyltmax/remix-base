@@ -23,8 +23,11 @@ Breaking release; see the [2.0.0 upgrade guide](docs/migrations/2.0.0.md). Inclu
   attributes sent with a type the rule does not use stop matching.
 - feat: `createGrowthBook` `debug` option, which logs condition evaluation (including type mismatches) through the Pino
   logger. Fixes the `log` callback, which passed `logger.info` unbound and threw on the first debug log.
+- chore(deps)!: Replace the deprecated `prom-client` with its renamed successor `@prometheus-io/client` `^0.16.1`, now a
+  peer dependency so the app and this package share one global registry. Metrics an app still creates from `prom-client`
+  would no longer appear on `/metrics`.
 - chore!: Require Node `>=26.0.0` (was `>=22.22.0`).
-- chore(deps): Upgrade `@signmax/config` to 4.0.0 and drop the stub `@types/set-cookie-parser`.
+- chore(deps): Upgrade `@signmax/config` to 4.0.0, drop the stub `@types/set-cookie-parser` and the unused `tslib`.
 - build: Run CI and the release workflow on Node 26; pnpm does not enforce the root `engines`, so CI on Node 24 would
   have passed below the declared floor.
 - feat: `serveApp` `preMiddleware` option, mounted after the request logger and before compression (when enabled),

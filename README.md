@@ -188,7 +188,15 @@ Fields set on `res.locals.log` before the response ends (e.g. `res.locals.log = 
 are merged into the request logger's "request completed" line.
 
 `startMetrics` spins up a dedicated Express app exposing `/metrics` and returns a handle so you can stop the server
-during shutdown.
+during shutdown. It serves `metricsRegistry`, the global registry of the `@prometheus-io/client` peer dependency, so
+create app metrics from that same package:
+
+```typescript
+import { Counter } from "@prometheus-io/client"
+
+const orders = new Counter({ name: "orders_total", help: "Orders placed" })
+orders.inc()
+```
 
 ## GraphQL Client
 
