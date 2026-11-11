@@ -96,15 +96,14 @@
   ],
   "prettier": "@signmax/config/prettier",
   "devDependencies": {
-    "@signmax/config": "3.0.1",
+    "@signmax/config": "4.0.0",
     "@types/compression": "1.8.1",
     "@types/cookie-parser": "1.4.10",
     "@types/express": "5.0.6",
     "@types/node": "26.6.6",
-    "@types/set-cookie-parser": "2.4.10",
     "@vitest/coverage-v8": "5.1.0",
     "eslint": "10.14.0",
-    "msw": "2.15.0",
+    "msw": "3.0.4",
     "node-mocks-http": "1.18.1",
     "npm-run-all2": "9.0.4",
     "prettier": "3.9.10",
@@ -136,7 +135,13 @@
     "@sentry/profiling-node": "^10.70.0",
     "@sentry/react-router": "^10.70.0",
     "express": "^5.3.0",
+    "msw": "^3.0.4",
     "react-router": "^8.5.1"
+  },
+  "peerDependenciesMeta": {
+    "msw": {
+      "optional": true
+    }
   },
   "optionalDependencies": {
     "@growthbook/growthbook": "^1.7.0",

@@ -15,7 +15,7 @@ describe("deviceKeyMiddleware", () => {
   const middleware = deviceKeyMiddleware({ cookieName: "sm_device_key" })
 
   beforeAll(() => {
-    server.listen({ onUnhandledRequest: "warn" })
+    server.listen({ onUnhandledFrame: "warn" })
   })
 
   afterEach(() => {

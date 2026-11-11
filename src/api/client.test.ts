@@ -18,7 +18,7 @@ describe("GraphQL client", () => {
   const server = setupServer(...handlers)
 
   beforeAll(() => {
-    server.listen({ onUnhandledRequest: "warn" })
+    server.listen({ onUnhandledFrame: "warn" })
   })
 
   afterEach(() => {

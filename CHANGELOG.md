@@ -9,11 +9,20 @@
 - feat!: Remove `trustCloudFrontIPs` together with CloudFront IP fetching, its 12-hour refresh and the bundled
   `cloudfront-ips` snapshots. Replace `trustCloudFrontIPs: false` with `trustProxy: false`, and drop
   `trustCloudFrontIPs: true`.
-- build!: Raise the `react-router` and `@react-router/express` peer floors from `^8.3.0` to `^8.5.1`; consumers must be
-  on React Router 8.5.1 or later.
-- build!: Raise the `express` peer floor from `^5.2.1` to `^5.3.0`, which brings `proxy-addr` 2.0.8 (CVE-2026-90711:
-  `req.ip` spoofing through a `trust proxy` subnet with zero leading bits, such as `::ffff:10.0.0.0/8`) and the `qs`
-  `arrayLimit`/`isBuffer` CVE fixes to consumers.
+- chore(deps)!: Raise the `react-router` and `@react-router/express` peer floors from `^8.3.0` to `^8.5.1`; consumers
+  must be on React Router 8.5.1 or later.
+- chore(deps)!: Raise the `express` peer floor from `^5.2.1` to `^5.3.0`, which brings `proxy-addr` 2.0.8
+  (CVE-2026-90711: `req.ip` spoofing through a `trust proxy` subnet with zero leading bits, such as `::ffff:10.0.0.0/8`)
+  and the `qs` `arrayLimit`/`isBuffer` CVE fixes to consumers.
+- chore(deps): Upgrade `@signmax/config` to 4.0.0 (`eslint-plugin-jsx-a11y-x` replaces `eslint-plugin-jsx-a11y`,
+  clearing the last eslint 10 peer warning; `reset.d.ts` now carries the vendored ts-reset 0.7.0 overrides).
+- feat!: `test/helpers` targets msw 3. `gqlOpHandler`'s `handler` parameter is now msw 3's `HttpResponse<JsonBodyType>`
+  (msw 3 removed `StrictResponse`), and `msw` `^3.0.4` is declared as an optional peer dependency. Consumers using the
+  helpers must upgrade to msw 3; see the msw 3.0.0 release notes (`onUnhandledRequest` is now `onUnhandledFrame`).
+- chore(deps): Drop `@types/set-cookie-parser`; `set-cookie-parser` 3 ships its own types and the 3.x `@types` package
+  is a deprecated stub.
+- build: Run CI and the release workflow on Node 26; `engines.node` is `>=26.0.0`, and pnpm does not enforce the root
+  `engines`, so CI on Node 24 would have passed below the declared floor.
 
 ### [1.1.0] - 2026-11-09
 

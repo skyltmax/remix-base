@@ -9,7 +9,7 @@ can ship React Router 8 projects without re-writing the same server glue.
 
 - React Router `^8.5.1` (`react-router` and `@react-router/express`) — middleware and `RouterContextProvider` are
   unconditional in v8, so no future flags are needed
-- Node `>=22.22.0`, the floor React Router 8 sets
+- Node `>=26.0.0`
 - Express `^5.3.0`
 
 ## Quick Start
@@ -279,7 +279,8 @@ The region falls back to `AWS_REGION` or `eu-central-1`.
 import { gqlOpHandler } from "@signmax/remix-base/test/helpers"
 ```
 
-MSW helpers simplify GraphQL mocking and reuse the package defaults.
+MSW helpers simplify GraphQL mocking and reuse the package defaults. They need `msw` `^3.0.4` in your project, declared
+as an optional peer dependency; `gqlOpHandler` takes the response as msw 3's `HttpResponse<JsonBodyType>`.
 
 ## Publishing
 

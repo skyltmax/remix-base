@@ -5,10 +5,10 @@ Renovate PR against this file; when an upgrade goes sideways for a reason not li
 
 ## 1. peerDependencies are the consumer contract
 
-`react-router`, `@react-router/express`, `express`, `@sentry/react-router` and `@sentry/profiling-node` are
-`peerDependencies`: their ranges define what every consumer (the monorepo BFFs) must satisfy. Renovate widens peer
-ranges instead of bumping them, so an in-range minor raises no PR — it arrives only through `lockFileMaintenance` — and
-a major surfaces as a widen (`^7.13.0` → `^7.13.0 || ^8.0.0`).
+`react-router`, `@react-router/express`, `express`, `@sentry/react-router`, `@sentry/profiling-node` and the optional
+`msw` (§11) are `peerDependencies`: their ranges define what every consumer (the monorepo BFFs) must satisfy. Renovate
+widens peer ranges instead of bumping them, so an in-range minor raises no PR — it arrives only through
+`lockFileMaintenance` — and a major surfaces as a widen (`^7.13.0` → `^7.13.0 || ^8.0.0`).
 
 **Raising a floor or narrowing a range is a breaking change of this package**, never routine maintenance: it forces
 every consumer to upgrade in lockstep with a catalog bump. `react-router` and `@react-router/express` ride the same
@@ -34,8 +34,9 @@ So a React Router major is briefed **twice**, and the two PRs are not the same r
 
 Current policy: **this package tracks a single React Router major.** The range is `^8.5.1`, narrowed by hand in the v8
 upgrade after a widen sat unvalidated on `main`. Narrowing invalidates the stale entries, so a plain `pnpm install`
-re-resolves — no `pnpm update` needed. `engines.node` (`>=22.22.0`) now mirrors the floor React Router 8 declares, and
-must move with any future major (§9).
+re-resolves — no `pnpm update` needed. `engines.node` is `>=26.0.0`, above React Router 8's own `>=22.22.0` floor and
+equal to what `@signmax/config` 4 declares; a future React Router major that raises its floor past it must move it too
+(§9).
 
 What the v8 upgrade did **not** require, and what that says about the next one: no `src/` change at all.
 `createContext`, `RouterContextProvider`, `HeadersArgs`, `ServerBuild` and the express adapter's `createRequestHandler`
@@ -90,8 +91,8 @@ its framework-mode integration is what the peer pair is for.
 
 ## 5. @signmax/config owns lint, format and the TypeScript config — and its peer range is wider than what it tests
 
-`@signmax/config` 2.0 keeps the whole ESLint/Prettier plugin roster in its own `dependencies`; this repo declares only
-the three CLIs it lists as peers: `eslint ^9.30.0 || ^10.0.0`, `prettier ^3.6.0`, `typescript >=5.9 <6.1`. A config bump
+`@signmax/config` keeps the whole ESLint/Prettier plugin roster in its own `dependencies`; this repo declares only the
+three CLIs it lists as peers: as of 4.0.0, `eslint ^10.0.0`, `prettier ^3.9.10`, `typescript >=5.9 <7.0`. A config bump
 therefore changes lint rules and formatting for the whole repo at once — run `pnpm validate`, and expect the
 `format-check` CI job to fail until the reformat is committed on the PR.
 
@@ -100,14 +101,14 @@ The 2.0 upgrade is the cautionary tale for CLI bumps, and all three cases were "
 - `prettier` 3.6.2 satisfied `^3.6.0` but the `prettier-plugin-tailwindcss` 0.8.1 the config pins crashed on it
   (`TypeError: a.startsWith is not a function`); the fix was moving to the 3.9.6 the config repo tests against.
 - `eslint` 9.39.1 satisfied `^9.30.0` but the config's own `@eslint/js` 10 pin declares `eslint ^10`, so pnpm reported
-  an unmet peer; we moved to eslint 10. `eslint-plugin-react` and `eslint-plugin-jsx-a11y` still declare peers that stop
-  at eslint 9 — upstream calls that stale metadata, pnpm warns, nothing fails, and neither plugin has files to lint here
-  (no JSX in `src/`).
+  an unmet peer; we moved to eslint 10. `eslint-plugin-react` and `eslint-plugin-jsx-a11y` declared peers that stopped
+  at eslint 9, so pnpm warned until the config replaced them with `@eslint-react/eslint-plugin` (3.x) and
+  `eslint-plugin-jsx-a11y-x` (4.0); the install is now free of peer warnings.
 - a newer `@vitest/eslint-plugin` enabled `vitest/no-conditional-expect`, which failed the build on three existing
   `try/catch` assertions in `src/api/client.test.ts`.
 
 So: treat the config's peer ranges as necessary, not sufficient — the version the config repo pins for itself is the one
-it actually verifies. Note also that `typescript >=5.9 <6.1` caps us: Renovate will happily offer a `typescript` 7 PR
+it actually verifies. Note also that `typescript >=5.9 <7.0` caps us: Renovate will happily offer a `typescript` 7 PR
 (it reads our devDependency, not the config's peer), and merging it would break the config's peer contract. A TypeScript
 major waits for a `@signmax/config` release that widens the cap.
 
@@ -160,18 +161,19 @@ allowlist.
 
 ## 9. CI toolchain versions in `with:` blocks are tracked
 
-The github-actions manager extracts `with:` values as depType `uses-with`, so `node-version: "24"` is a tracked
+The github-actions manager extracts `with:` values as depType `uses-with`, so `node-version: "26"` is a tracked
 dependency (verified: `depName: node`, `packageName: actions/node-versions`, `versioning: node`) and raises ordinary
 bump PRs — it is not, as previously assumed here, invisible to Renovate. `pnpm` is not among them; it comes from
 `packageManager` (§7).
 
 Both mirror something owned elsewhere, so the brief's question is "does this match what the devcontainer image ships?"
-(§2) — the image is the local toolchain. There is now a third Node number to keep straight: `engines.node`
-(`>=22.22.0`), added with the React Router 8 upgrade, is the floor we impose on **consumers**, and it tracks React
-Router's floor rather than our CI or the image (§1). CI's `24` and the image only need to clear it, never match it.
-Check the first such PR for precision drift as well: the value is written as a bare major, and a proposal that rewrites
-it to `24.19.0` would pin CI to one patch instead of floating with the image (disable patch updates for it if that
-happens, the way skyltmax/config does for `ruby-version`).
+(§2) — the image is the local toolchain. There is a third Node number to keep straight: `engines.node` (`>=26.0.0`) is
+the floor we impose on **consumers** (§1). CI's `26` and the image must satisfy it, or CI tests a runtime consumers are
+not allowed to use — pnpm does not enforce the root package's `engines`, so a CI version below the floor installs and
+passes silently (the floor moved to 26 in a commit that left CI on `24`). Check the first such PR for precision drift as
+well: the value is written as a bare major, and a proposal that rewrites it to `26.13.0` would pin CI to one patch
+instead of floating with the image (disable patch updates for it if that happens, the way skyltmax/config does for
+`ruby-version`).
 
 Related: `workarounds:all` gives `@types/node` `node` versioning, which keeps it tracking Node release lines rather than
 plain SemVer — it currently sits a major ahead of the CI Node, which is fine for types but worth a look on any bump.
@@ -185,12 +187,17 @@ plain SemVer — it currently sits a major ahead of the CI Node, which is fine f
   `vitest.config.ts` + `vite-tsconfig-paths`. A `vite` major (8) can therefore be merged while vitest still resolves its
   own vite 7 — two Vite majors in one install. Wait for vitest to widen its range.
 
-## 11. msw is a devDependency that ships in a published export path
+## 11. msw ships in a published export path
 
-`package.json` exposes `./test/helpers`, and `src/test/helpers.ts` imports `msw` — yet `msw` is only a devDependency.
-Consumers importing that path resolve `msw` from their own tree, so an msw major changes a **published** contract even
-though nothing in our dependency blocks says so. Check `src/test/helpers.ts` against the new msw API on every msw major,
-and treat it as consumer-visible in the CHANGELOG (§6).
+`package.json` exposes `./test/helpers`, and `src/test/helpers.ts` imports `msw`. Consumers importing that path resolve
+`msw` from their own tree, so an msw major changes a **published** contract: msw 3 dropped `StrictResponse<T>` for the
+generic `HttpResponse<T>`, which is the type of `gqlOpHandler`'s `handler` parameter. Since msw 3, `msw` is therefore an
+optional `peerDependency` (`peerDependenciesMeta.msw.optional`) as well as a devDependency, so the range is part of the
+consumer contract in §1: raising it is a breaking change. Check `src/test/helpers.ts` against the new msw API on every
+msw major, and treat it as consumer-visible in the CHANGELOG (§6).
+
+vitest does not type-check, so a renamed msw option or type passes `pnpm test` and only fails `pnpm typecheck` (the 3.0
+upgrade renamed `onUnhandledRequest` to `onUnhandledFrame` that way).
 
 ## 12. pino-http is loaded through a CJS/ESM interop shim
 

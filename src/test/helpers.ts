@@ -1,4 +1,4 @@
-import { type JsonBodyType, type PathParams, type StrictResponse, http } from "msw"
+import { type HttpResponse, type JsonBodyType, type PathParams, http } from "msw"
 import { DEFAULT_ENDPOINT } from "../api/client.js"
 
 export type GqlPersistedRequestBody = {
@@ -9,7 +9,7 @@ export interface GqlOpHandlerOptions {
   endpoint?: string
 }
 
-export const gqlOpHandler = (opName: string, handler: StrictResponse<JsonBodyType>, options?: GqlOpHandlerOptions) => {
+export const gqlOpHandler = (opName: string, handler: HttpResponse<JsonBodyType>, options?: GqlOpHandlerOptions) => {
   const endpoint = options?.endpoint ?? DEFAULT_ENDPOINT
 
   return http.post<PathParams, GqlPersistedRequestBody, JsonBodyType>(endpoint, async ({ request }) => {
