@@ -97,7 +97,7 @@
   "prettier": "@signmax/config/prettier",
   "devDependencies": {
     "@prometheus-io/client": "0.16.1",
-    "@signmax/config": "4.0.0",
+    "@signmax/config": "4.0.1",
     "@types/cookie-parser": "1.4.10",
     "@types/express": "5.0.6",
     "@types/node": "26.6.6",
