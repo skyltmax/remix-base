@@ -103,7 +103,7 @@
     "@types/node": "26.6.6",
     "@vitest/coverage-v8": "5.1.0",
     "eslint": "10.14.0",
-    "msw": "3.0.4",
+    "msw": "3.0.5",
     "node-mocks-http": "1.18.1",
     "npm-run-all2": "9.0.4",
     "prettier": "3.9.10",
